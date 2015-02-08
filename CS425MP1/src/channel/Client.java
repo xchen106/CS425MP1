@@ -4,8 +4,6 @@ import java.io.IOException;
 
 // reference http://www.careerbless.com/samplecodes/java/beginners/socket/SocketBasic1.php
 
-// test test test
-
 
 public class Client {
 	public static void main(String[] args) throws IOException, InterruptedException {
