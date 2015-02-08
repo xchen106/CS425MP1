@@ -37,8 +37,7 @@ public class Server {
             try {
                 clientSocket = this.listener.accept();
             } catch (IOException e) {
-            	throw new RuntimeException(
-                    "Error connecting", e);
+            	throw new RuntimeException("Error connecting", e);
             }
             // start a new thread to handle the request
             new Thread(new ServerThread(clientSocket)).start();
@@ -48,9 +47,7 @@ public class Server {
 	
 	
 	public static void main(String[] args){
-		
 		new Server(9090).run();
-		
 	}
 	
 }
