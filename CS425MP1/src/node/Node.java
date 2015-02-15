@@ -18,11 +18,9 @@ public class Node {
 		new Node().initialization("accessories/configuration", 'A');
 	}*/
 	
-	public void handleMessage(Message m)
-	{
-		
-	}
+	
 	public void initialization(String configurationFile, char index){
+		this.index = index;
 		
 		// read the addresses and port numbers from the configuration file
 		HashMap<String, String> configuration = new Utils().parseConfigure(configurationFile);
@@ -61,7 +59,22 @@ public class Node {
 			e.printStackTrace();
 		}*/
 		
+	}
+	
+	
+	public void handleMessage(Message m) {
+		int operation = m.operation;
+		
+		switch(operation){
+		case 0:
+			String message = "Received \"" + m.Content + "\" from " + m.from + ", Max delay is" ;
+			break;
+			
+			
+			
+		}
 		
 	}
+	
 	
 }
