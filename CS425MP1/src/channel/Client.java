@@ -1,29 +1,45 @@
 package channel;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 // reference http://www.careerbless.com/samplecodes/java/beginners/socket/SocketBasic1.php
 
-// test test test 
 
 public class Client {
-	public static void main(String[] args) throws IOException, InterruptedException {
-        String serverAddress1 = "0.0.0.0";
-        String serverPort1 = "9090";
-        String serverAddress2 = "0.0.0.0";
-        String serverPort2 = "9090";
-        String serverAddress3 = "0.0.0.0";
-        String serverPort3 = "9090";
-        int max = 10;
+	
+	static DelayedChannel channel1;
+	static DelayedChannel channel2;
+	static DelayedChannel channel3;
+	
+	public void initialization(HashMap<String, String> configuration, int maxDelay){
+		
+		// read the configuration
+		String serverAddress1 = configuration.get("serverAddress1");
+        String serverAddress2 = configuration.get("serverAddress2");
+        String serverAddress3 = configuration.get("serverAddress3");
+        String serverPort1 = configuration.get("serverPort1");
+        String serverPort2 = configuration.get("serverPort2");
+        String serverPort3 = configuration.get("serverPort3");
         
-        DelayedChannel channel1 = new DelayedChannel(serverAddress1, serverPort1, max);
-        DelayedChannel channel2 = new DelayedChannel(serverAddress2, serverPort2, max);
-        DelayedChannel channel3 = new DelayedChannel(serverAddress3, serverPort3, max);
+        // start the channels
+        try {
+        	channel1 = new DelayedChannel(serverAddress1, serverPort1, maxDelay);
+			channel2 = new DelayedChannel(serverAddress2, serverPort2, maxDelay);
+	        channel3 = new DelayedChannel(serverAddress3, serverPort3, maxDelay);
+		} catch (NumberFormatException | IOException e) {
+			e.printStackTrace();
+		}
         
         channel1.start();
         channel2.start();
         channel3.start();
-        
+	}
+	
+	
+	public static void main(String[] args) throws IOException, InterruptedException {
+		
+		
         channel1.putContents("test1");
         channel2.putContents("test2");
         channel3.putContents("test3");
@@ -33,4 +49,5 @@ public class Client {
         channel3.join();
         System.exit(0);
     }
+	
 }

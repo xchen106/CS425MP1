@@ -1,0 +1,6 @@
+serverAddress1 0.0.0.0
+serverAddress2 0.0.0.0
+serverAddress3 0.0.0.0
+serverPort1 8080
+serverPort2 8080
+serverPort3 8080

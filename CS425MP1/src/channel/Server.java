@@ -5,11 +5,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 
-// reference http://tutorials.jenkov.com/java-multithreaded-servers/multithreaded-server.html
-
-
 public class Server {
-	protected int port = 8080;
+	protected int port = 9090;
     protected ServerSocket listener = null;
     protected Thread runningThread = null;
     

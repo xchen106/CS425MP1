@@ -19,6 +19,7 @@ public class ServerThread implements Runnable{
 			// handle the request
 			handle(clientSocket);
 			
+			// close the socket
             clientSocket.close();
 		} catch (IOException e) {
             e.printStackTrace();
