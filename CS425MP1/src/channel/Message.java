@@ -13,11 +13,14 @@ public class Message {
 	char from;
 	char to;
 	/**
-	 * 0 --
+	 * 0 -- linearizable
+	 * 1 -- sequential
+	 * 2 -- event W1 R1
+	 * 3 -- event W2 R2
 	 */
 	int model;
 	/**
-	 * 0 -- print
+	 * 0 -- print (send)
 	 * 1 -- delete
 	 * 2 -- get
 	 * 3 -- insert
@@ -29,12 +32,21 @@ public class Message {
 	 * 9 -- search
 	 * 10-- has key or not
 	 * 11-- delay
+	 * 12-- show-all
 	 */
 	int operation;
 	
 	
 	public Message(String c)
 	{
+		String[] parseResult = c.split("\\s+");
+		String op = parseResult[0];
+		op=op.toLowerCase();
+		switch(op)
+		{
+		case "send": this.operation=0;
+		
+		}
 		
 	}
 	public void setSentTime()
