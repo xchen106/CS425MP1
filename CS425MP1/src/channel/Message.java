@@ -8,10 +8,12 @@ public class Message {
 	Date SentTime;
 	Date EstimatedDeliverTime;
 	Date RealDeliverTime;
-	public String key;
-	public String value;
-	public char from;
-	public char to;
+	public String Key;
+	public String Value;
+	public char From;
+	public char To;
+	public int MaxDelay;
+
 	/**
 	 * 0 -- linearizable
 	 * 1 -- sequential
@@ -45,11 +47,14 @@ public class Message {
 		switch(op)
 		{
 		case "send": this.operation=0;break;
-		case "delete": this.operation=5; this.key=parseResult[1];this.model = Integer.parseInt(parseResult[2]); break;
-		case "get": this.operation=6; this.key=parseResult[1];this.value=parseResult[2]; this.model = Integer.parseInt(parseResult[3]); break;
-		case "insert": this.operation=7; this.key=parseResult[1];this.value=parseResult[2];this.model = Integer.parseInt(parseResult[3]); break;
-		case "update": this.operation=8; this.key=parseResult[1];this.value=parseResult[2];this.model = Integer.parseInt(parseResult[3]); break;
-		case "search": this.operation=9;
+		case "delete": this.operation=5; this.Key=parseResult[1];this.model = Integer.parseInt(parseResult[2]); break;
+		case "get": this.operation=6; this.Key=parseResult[1];this.Value=parseResult[2]; this.model = Integer.parseInt(parseResult[3]); break;
+		case "insert": this.operation=7; this.Key=parseResult[1];this.Value=parseResult[2];this.model = Integer.parseInt(parseResult[3]); break;
+		case "update": this.operation=8; this.Key=parseResult[1];this.Value=parseResult[2];this.model = Integer.parseInt(parseResult[3]); break;
+		case "search": this.operation=9; this.Key=parseResult[1]; break;
+		case "delay": this.operation=11; this.Value=parseResult[1];break;
+		case "show-all": this.operation=12;break;
+		default: System.out.println("WRONG FORMAT OF INPUT!");
 		}
 		
 	}
