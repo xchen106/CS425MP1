@@ -20,7 +20,7 @@ public class Message {
 	 * 2 -- event W1 R1
 	 * 3 -- event W2 R2
 	 */
-	public int model;
+	public int Model;
 	/**
 	 * 0 -- print (send)
 	 * 1 -- delete
@@ -36,7 +36,7 @@ public class Message {
 	 * 11-- delay
 	 * 12-- show-all
 	 */
-	public int operation;
+	public int Operation;
 	
 	
 	public Message(String c)
@@ -46,14 +46,14 @@ public class Message {
 		op=op.toLowerCase();
 		switch(op)
 		{
-		case "send": this.operation=0;break;
-		case "delete": this.operation=5; this.Key=parseResult[1];this.model = Integer.parseInt(parseResult[2]); break;
-		case "get": this.operation=6; this.Key=parseResult[1];this.Value=parseResult[2]; this.model = Integer.parseInt(parseResult[3]); break;
-		case "insert": this.operation=7; this.Key=parseResult[1];this.Value=parseResult[2];this.model = Integer.parseInt(parseResult[3]); break;
-		case "update": this.operation=8; this.Key=parseResult[1];this.Value=parseResult[2];this.model = Integer.parseInt(parseResult[3]); break;
-		case "search": this.operation=9; this.Key=parseResult[1]; break;
-		case "delay": this.operation=11; this.Value=parseResult[1];break;
-		case "show-all": this.operation=12;break;
+		case "send": this.Operation=0;break;
+		case "delete": this.Operation=5; this.Key=parseResult[1];this.Model = Integer.parseInt(parseResult[2]); break;
+		case "get": this.Operation=6; this.Key=parseResult[1];this.Value=parseResult[2]; this.Model = Integer.parseInt(parseResult[3]); break;
+		case "insert": this.Operation=7; this.Key=parseResult[1];this.Value=parseResult[2];this.Model = Integer.parseInt(parseResult[3]); break;
+		case "update": this.Operation=8; this.Key=parseResult[1];this.Value=parseResult[2];this.Model = Integer.parseInt(parseResult[3]); break;
+		case "search": this.Operation=9; this.Key=parseResult[1]; break;
+		case "delay": this.Operation=11; this.Value=parseResult[1];break;
+		case "show-all": this.Operation=12;break;
 		default: System.out.println("WRONG FORMAT OF INPUT!");
 		}
 		
