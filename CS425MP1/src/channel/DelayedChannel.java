@@ -37,9 +37,7 @@ public class DelayedChannel extends Thread{
 	public void putContents(String c)
 	{
 		Message m=new Message(c);
-		
-		System.out.println(m.Content);
-		
+				
 		m.setSentTime();
 		m.setEstimatedDeliverTime(MaxDelay);
 		Contents.add(m);

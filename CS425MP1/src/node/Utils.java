@@ -1,4 +1,4 @@
-package main;
+package node;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -16,12 +16,11 @@ public class Utils {
 		
 		try(BufferedReader br = new BufferedReader(new FileReader(filePath))) {
 	        String line = br.readLine();
-	        
-	        // read line by line
 	        while (line != null) {
 	        	// split by whitespace characters
 	            String[] parseResult = line.split("\\s+");
 	        	parseResults.put(parseResult[0], parseResult[1]);
+	        	line = br.readLine();
 	        }
 	    } catch (FileNotFoundException e) {
 			e.printStackTrace();

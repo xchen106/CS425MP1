@@ -2,8 +2,10 @@ serverAddressA 0.0.0.0
 serverAddressB 0.0.0.0
 serverAddressC 0.0.0.0
 serverAddressD 0.0.0.0
-serverPortA 8080
-serverPortB 8080
-serverPortC 8080
-serverPortD 8080
+serverAddressO 0.0.0.0
+serverPortA 9000
+serverPortB 9001
+serverPortC 9002
+serverPortD 9003
+serverPortO 9004
 delay 10
