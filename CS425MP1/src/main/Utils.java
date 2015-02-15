@@ -1,4 +1,4 @@
-package channel;
+package main;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -10,7 +10,7 @@ public class Utils {
 
 	
 	// parse the configuration file and store them into a hashmap
-	HashMap<String, String> parseConfigure(String filePath){
+	public HashMap<String, String> parseConfigure(String filePath){
 		// parse results for the whole configuration file
 		HashMap<String, String> parseResults = new HashMap<String, String>();
 		
@@ -31,5 +31,27 @@ public class Utils {
 		
 		return parseResults;
 	}
+	
+	// pass the input message
+	public HashMap<String, String> parseInputCommand(String command){
+		// store the parsed results
+		HashMap<String, String> parseResultMap = new HashMap<String, String>();
+		
+		String[] parseResult = command.split("\\s+");
+		String operation = parseResult[0].toLowerCase();
+		parseResultMap.put("operation", operation);
+		
+		switch(operation){
+		case "send":
+			parseResultMap.put("message", parseResult[1]);
+			parseResultMap.put("destination", parseResult[2].toUpperCase());
+			break;
+		}
+		
+		
+		return parseResultMap;
+	}
+	
+	
 	
 }

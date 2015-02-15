@@ -3,16 +3,17 @@ package channel;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
 
 
-public class Server {
+public class Server extends Thread{
 	protected int port = 9090;
     protected ServerSocket listener = null;
     protected Thread runningThread = null;
     
     // initialize the port number
-    public Server(int port){
-    	this.port = port;
+    public Server(HashMap<String, String> configuration){
+    	this.port = Integer.valueOf(configuration.get("serverPort0"));
     }
 	
 	public void run(){
@@ -40,11 +41,6 @@ public class Server {
             new Thread(new ServerThread(clientSocket)).start();
         }
         
-	}
-	
-	
-	public static void main(String[] args){
-		new Server(9090).run();
 	}
 	
 }

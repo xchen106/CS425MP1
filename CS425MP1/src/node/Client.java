@@ -1,53 +1,87 @@
-package channel;
+package node;
 
 import java.io.IOException;
 import java.util.HashMap;
 
-// reference http://www.careerbless.com/samplecodes/java/beginners/socket/SocketBasic1.php
+import main.Utils;
+import channel.DelayedChannel;
 
-
-public class Client {
+public class Client extends Thread{
 	
-	static DelayedChannel channel1;
-	static DelayedChannel channel2;
-	static DelayedChannel channel3;
+	// delayed channels
+	static DelayedChannel channelA;
+	static DelayedChannel channelB;
+	static DelayedChannel channelC;
+	static DelayedChannel channelD;
 	
-	public void initialization(HashMap<String, String> configuration, int maxDelay){
-		
-		// read the configuration
-		String serverAddress1 = configuration.get("serverAddress1");
-        String serverAddress2 = configuration.get("serverAddress2");
-        String serverAddress3 = configuration.get("serverAddress3");
-        String serverPort1 = configuration.get("serverPort1");
-        String serverPort2 = configuration.get("serverPort2");
-        String serverPort3 = configuration.get("serverPort3");
+	// the addresses and ports for the channels
+	String serverAddressA;
+    String serverAddressB;
+    String serverAddressC;
+    String serverAddressD;
+    String serverPortA;
+    String serverPortB;
+    String serverPortC;
+    String serverPortD;
+    
+    // maximum delay
+    int maxDelay;
+    
+    public Client(HashMap<String, String> configuration){
+    	serverAddressA = configuration.get("serverAddressA");
+        serverAddressB = configuration.get("serverAddressB");
+        serverAddressC = configuration.get("serverAddressC");
+        serverAddressD = configuration.get("serverAddressD");
+        serverPortA = configuration.get("serverPortA");
+        serverPortB = configuration.get("serverPortB");
+        serverPortC = configuration.get("serverPortC");
+        serverPortD = configuration.get("serverPortD");
+        maxDelay = Integer.valueOf(configuration.get("delay"));
+    }
+	
+	// initialization
+	public void run(){		
         
         // start the channels
         try {
-        	channel1 = new DelayedChannel(serverAddress1, serverPort1, maxDelay);
-			channel2 = new DelayedChannel(serverAddress2, serverPort2, maxDelay);
-	        channel3 = new DelayedChannel(serverAddress3, serverPort3, maxDelay);
+        	channelA = new DelayedChannel(serverAddressA, serverPortA, maxDelay);
+			channelB = new DelayedChannel(serverAddressB, serverPortB, maxDelay);
+	        channelC = new DelayedChannel(serverAddressC, serverPortC, maxDelay);
+	        channelD = new DelayedChannel(serverAddressD, serverPortD, maxDelay);
 		} catch (NumberFormatException | IOException e) {
 			e.printStackTrace();
 		}
         
-        channel1.start();
-        channel2.start();
-        channel3.start();
+        channelA.start();
+        channelB.start();
+        channelC.start();
+        channelD.start();
+	}
+	
+	public void runInput(String input){
+		HashMap<String, String> parsedOperation = new Utils().parseInputCommand(input);
+		
+		switch(parsedOperation.get("operation")){
+		case "send":
+			sendMessages(parsedOperation);
+		
+		}
+		
 	}
 	
 	
-	public static void main(String[] args) throws IOException, InterruptedException {
-		
-		
-        channel1.putContents("test1");
-        channel2.putContents("test2");
-        channel3.putContents("test3");
-        
-        channel1.join();
-        channel2.join();
-        channel3.join();
-        System.exit(0);
-    }
+	public void sendMessages(HashMap<String, String> parsedOperation){
+		String message = parsedOperation.get("message");
+		switch(parsedOperation.get("destination")){
+		case "A":
+			channelA.putContents(message);break;
+		case "B":
+			channelB.putContents(message);break;
+		case "C":
+			channelC.putContents(message);break;
+		case "D":
+			channelD.putContents(message);break;
+		}
+	}
 	
 }

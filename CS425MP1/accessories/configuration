@@ -1,6 +1,9 @@
-serverAddress1 0.0.0.0
-serverAddress2 0.0.0.0
-serverAddress3 0.0.0.0
-serverPort1 8080
-serverPort2 8080
-serverPort3 8080
+serverAddressA 0.0.0.0
+serverAddressB 0.0.0.0
+serverAddressC 0.0.0.0
+serverAddressD 0.0.0.0
+serverPortA 8080
+serverPortB 8080
+serverPortC 8080
+serverPortD 8080
+delay 10
