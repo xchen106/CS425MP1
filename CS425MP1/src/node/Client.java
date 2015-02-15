@@ -71,31 +71,40 @@ public class Client extends Thread{
         channelO.start();
 	}
 	
+	// run the input command
 	public void runInput(String input){
 		HashMap<String, String> parsedOperation = new Utils().parseInputCommand(input);
 		
 		switch(parsedOperation.get("operation")){
 		case "send":
-			sendMessages(parsedOperation);break;
-			
+			sendMessages(parsedOperation);			
+			break;
+		
 		}
 		
 	}
 	
-	
+	// send a message to another machine
 	public void sendMessages(HashMap<String, String> parsedOperation){
-		String message = parsedOperation.get("message");
-		switch(parsedOperation.get("destination")){
+		String messageContent = parsedOperation.get("message");
+		String desitation = parsedOperation.get("destination");
+		// the message to be shown on the local machine
+		String clientMessage = "Sent \"" + messageContent + "\" to " + desitation + ", system time is " + System.currentTimeMillis();
+		System.out.println(clientMessage);
+		// the message to be sent
+		String serverMessage = "Received \"" + messageContent + "\" from " + index + " Max delay is " + String.valueOf(maxDelay) + " s, system time is " + System.currentTimeMillis();
+		
+		switch(desitation){
 		case "A":
-			channelA.putContents(message);break;
+			channelA.putContents(serverMessage);break;
 		case "B":
-			channelB.putContents(message);break;
+			channelB.putContents(serverMessage);break;
 		case "C":
-			channelC.putContents(message);break;
+			channelC.putContents(serverMessage);break;
 		case "D":
-			channelD.putContents(message);break;
+			channelD.putContents(serverMessage);break;
 		case "O":
-			channelO.putContents(message);break;
+			channelO.putContents(serverMessage);break;
 		}
 	}
 	
