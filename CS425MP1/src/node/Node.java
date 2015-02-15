@@ -5,16 +5,23 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 
+import channel.Message;
+
 public class Node {
 	
 	Client clientThread;
 	Server serverThread;
+	char index;
 	
-	public static void main(String[] args){
-		new Node().initialization("accessories/configuration", 'O');
+	
+/*	public static void main(String[] args){
+		new Node().initialization("accessories/configuration", 'A');
+	}*/
+	
+	public void handleMessage(Message m)
+	{
+		
 	}
-	
-
 	public void initialization(String configurationFile, char index){
 		
 		// read the addresses and port numbers from the configuration file

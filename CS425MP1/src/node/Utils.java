@@ -45,6 +45,9 @@ public class Utils {
 			parseResultMap.put("message", parseResult[1]);
 			parseResultMap.put("destination", parseResult[2].toUpperCase());
 			break;
+		case "delay":
+			
+			
 		}
 		
 		
