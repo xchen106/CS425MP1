@@ -8,9 +8,34 @@ public class Message {
 	Date SentTime;
 	Date EstimatedDeliverTime;
 	Date RealDeliverTime;
+	String key;
+	String value;
+	char from;
+	char to;
+	/**
+	 * 0 --
+	 */
+	int model;
+	/**
+	 * 0 -- print
+	 * 1 -- delete
+	 * 2 -- get
+	 * 3 -- insert
+	 * 4 -- update
+	 * 5 -- delete (coordinator)
+	 * 6 -- get (coordinator)
+	 * 7 -- insert (coordinator)
+	 * 8 -- update (coordinator)
+	 * 9 -- search
+	 * 10-- has key or not
+	 * 11-- delay
+	 */
+	int operation;
+	
+	
 	public Message(String c)
 	{
-		Content=c;
+		
 	}
 	public void setSentTime()
 	{
