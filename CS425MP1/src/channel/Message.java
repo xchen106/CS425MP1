@@ -4,21 +4,21 @@ import java.util.Date;
 
 
 public class Message {
-	String Content;
+	public String Content;
 	Date SentTime;
 	Date EstimatedDeliverTime;
 	Date RealDeliverTime;
-	String key;
-	String value;
-	char from;
-	char to;
+	public String key;
+	public String value;
+	public char from;
+	public char to;
 	/**
 	 * 0 -- linearizable
 	 * 1 -- sequential
 	 * 2 -- event W1 R1
 	 * 3 -- event W2 R2
 	 */
-	int model;
+	public int model;
 	/**
 	 * 0 -- print (send)
 	 * 1 -- delete
@@ -34,7 +34,7 @@ public class Message {
 	 * 11-- delay
 	 * 12-- show-all
 	 */
-	int operation;
+	public int operation;
 	
 	
 	public Message(String c)
@@ -44,8 +44,12 @@ public class Message {
 		op=op.toLowerCase();
 		switch(op)
 		{
-		case "send": this.operation=0;
-		
+		case "send": this.operation=0;break;
+		case "delete": this.operation=5; this.key=parseResult[1];this.model = Integer.parseInt(parseResult[2]); break;
+		case "get": this.operation=6; this.key=parseResult[1];this.value=parseResult[2]; this.model = Integer.parseInt(parseResult[3]); break;
+		case "insert": this.operation=7; this.key=parseResult[1];this.value=parseResult[2];this.model = Integer.parseInt(parseResult[3]); break;
+		case "update": this.operation=8; this.key=parseResult[1];this.value=parseResult[2];this.model = Integer.parseInt(parseResult[3]); break;
+		case "search": this.operation=9;
 		}
 		
 	}
