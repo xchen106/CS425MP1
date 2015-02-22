@@ -15,7 +15,9 @@ public class Message {
 	public String Value;
 	public char From;
 	public char To;
+	public char Origin;
 	public int MaxDelay;
+	public int Index;
 
 	/**
 	 * 0 -- linearizable
@@ -39,17 +41,11 @@ public class Message {
 	 * 11-- delay
 	 * 12-- show-all
 	 */
+	
+	// TODO repair ??????
+	
 	public int Operation;
 	
-	public void transformForCoordinator()
-	{
-		if(this.Operation>=5&&this.Operation<=8)
-		{
-			this.To=this.From;
-			this.From='O';
-			this.Operation-=4;
-		}
-	}
 	public Message()
 	{
 		
@@ -73,16 +69,32 @@ public class Message {
 		}
 		
 	}
+	
+	public Message(String Content, String Key, String Value, char Origin, char From, char To, int MaxDelay, int Model, int Operation, int Index){
+		this.Content = Content;
+		this.Key = Key;
+		this.Value = Value;
+		this.Origin = Origin;
+		this.From = From;
+		this.To = To;
+		this.MaxDelay = MaxDelay;
+		this.Model = Model;
+		this.Operation = Operation;
+		this.Index = Index;
+	}
+	
 	public String messageToString()
 	{
 		StringBuilder sb=new StringBuilder();
 		sb.append(Content).append(";");
 		sb.append(Key).append(";");
 		sb.append(Value).append(";");
+		sb.append(Origin).append(";");
 		sb.append(From).append(";");
 		sb.append(To).append(";");
 		sb.append(MaxDelay).append(";");
 		sb.append(Operation).append(";");
+		sb.append(Index).append(";");
 		DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		sb.append(formatter.format(SentTime)).append(";");
 		sb.append(formatter.format(EstimatedDeliverTime)).append(";");
@@ -96,14 +108,16 @@ public class Message {
 		m.Content=ss[0];
 		m.Key=ss[1];
 		m.Value=ss[2];
-		m.From=ss[3].charAt(0);
-		m.To=ss[4].charAt(0);
-		m.MaxDelay=Integer.parseInt(ss[5]);
-		m.Operation=Integer.parseInt(ss[6]);
+		m.Origin=ss[3].charAt(0);
+		m.From=ss[4].charAt(0);
+		m.To=ss[5].charAt(0);
+		m.MaxDelay=Integer.parseInt(ss[6]);
+		m.Operation=Integer.parseInt(ss[7]);
+		m.Index=Integer.parseInt(ss[8]);
 		DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		m.SentTime=formatter.parse(ss[7]);
-		m.EstimatedDeliverTime=formatter.parse(ss[8]);
-		m.RealDeliverTime=formatter.parse(ss[9]);
+		m.SentTime=formatter.parse(ss[9]);
+		m.EstimatedDeliverTime=formatter.parse(ss[10]);
+		m.RealDeliverTime=formatter.parse(ss[11]);
 		return m;
 		
 	}
