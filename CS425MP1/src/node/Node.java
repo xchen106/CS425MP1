@@ -53,21 +53,6 @@ public class Node {
 		}
 		clientThread.start();
 		
-		
-		while(true){
-			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-			String input;
-	
-			try {
-				while((input=br.readLine())!=null){
-					// TODO: run it in Client or here??
-					
-					
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
 
 	
 		
@@ -95,6 +80,7 @@ public class Node {
 				m.Index = ++messageIndex;
 				sendToAnother(m, m.To);
 				System.out.println(displayContent);
+				sent = false;
 			}else{	// if receiving a message
 				String displayContent = "Received \"" + m.Content + "\" from " + m.Origin + ", Max delay is " + m.MaxDelay + " s, system time is " + System.currentTimeMillis();
 				System.out.println(displayContent);
@@ -109,7 +95,6 @@ public class Node {
 				m.Origin = index;
 				m.Index = ++messageIndex;
 				sendToAnother(m, 'O');
-				sent = true;
 			}else{	// If receive the delete command from a coordinator, delete immediately
 				if(values.containsKey(m.Key)){
 					values.remove(m.Key);
@@ -140,12 +125,11 @@ public class Node {
 						displayContent += "null";
 					}
 					System.out.println(displayContent);
+					sent = false;
 				}else if(m.Model == 0){	// For linearizability, send it to the coordinator
 					sendToAnother(m, 'O');
-					sent = true;
 				}else{	// For eventual consistency, send the message request to all other nodes
 					sentToAllOthers(m);
-					sent = true;
 				}
 			}else if(m.Model == 0 && m.Origin == index && m.Index == messageIndex){	// If it's a just sent linearinizability read request
 				String displayContent = "Get " + m.Key + " ";
@@ -196,6 +180,7 @@ public class Node {
 			break;
 		
 		// Insert a key value pair
+			// eventual consistent : directly send to other
 		case 3:
 			if(index == 'O'){
 				sentToAllOthers(m);
@@ -257,7 +242,6 @@ public class Node {
 				m.Index = ++messageIndex;
 				
 				sentToAllOthers(m);
-				sent = true;
 			}else{
 				if(m.Origin != index){	// If it's a request from another node, send back whether it contains the Key
 					if(values.containsKey(m.Key) == true){
@@ -299,6 +283,8 @@ public class Node {
 				e.printStackTrace();
 			}
 			
+			sent = false;
+			
 			break;
 			
 		// Show all
@@ -306,6 +292,8 @@ public class Node {
 			for(Entry<String, String> entry : values.entrySet()){
 				System.out.println(entry.getKey() + "," + entry.getValue());
 			}
+			
+			sent = false;
 			break;
 			
 		}

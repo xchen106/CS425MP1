@@ -1,9 +1,16 @@
 package node;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 
 import channel.DelayedChannel;
+import channel.Message;
 
 public class Client extends Thread{
 	
@@ -70,12 +77,53 @@ public class Client extends Thread{
         channelD.start();        
         channelO.start();
         
-        // TODO: read the input from a command file, then move all the "if origin == ' '" to here
-        // TODO: how to deal with input from both keyboard and file?
+        
+        // Print a menu
+        while(true){
+        	System.out.println("Select your input type: \n(1) Input from keyboard\n(2) Input from file\n");
+        	BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        	
+        	int option = 0;
+        	try {
+				option = Integer.valueOf(br.readLine());
+			
+	        	if(option == 1){	// read from screen input
+	        		String messageLine = br.readLine();
+	        		handleInputMessage(messageLine);
+	        		// Wait until the message 
+	        		while(this.node.sent == true);
+	        	}else{				// read from file input
+	        		String fileLocation = br.readLine();
+	        		Path path = Paths.get(fileLocation);
+	        		Charset charset = Charset.forName("US-ASCII");
+	        		BufferedReader reader = Files.newBufferedReader(path, charset);
+	        		
+	        		String messageLine = null;
+	        		while ((messageLine = reader.readLine()) != null) {
+		        		handleInputMessage(messageLine);
+		        		// Wait until the message
+		    	        while(this.node.sent == true);
+	        		}   
+
+	        	}
+        	
+        	} catch (NumberFormatException e1) {
+				e1.printStackTrace();
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			
+		}
         
         
 	}
 	
 	
+	// handle the input message from either keyboard or file
+	public void handleInputMessage(String messageLine){
+		Message m = new Message(messageLine);
+		this.node.handleMessage(m);
+		this.node.sent = true;
+    }
 	
 }
