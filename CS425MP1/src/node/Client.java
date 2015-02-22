@@ -7,6 +7,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.ParseException;
 import java.util.HashMap;
 
 import channel.DelayedChannel;
@@ -122,7 +123,11 @@ public class Client extends Thread{
 	// handle the input message from either keyboard or file
 	public void handleInputMessage(String messageLine){
 		Message m = new Message(messageLine);
-		this.node.handleMessage(m);
+		try {
+			this.node.handleMessage(m);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
 		this.node.sent = true;
     }
 	
