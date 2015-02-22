@@ -65,19 +65,6 @@ public class Message {
 		
 	}
 	
-	public Message(String Content, String Key, String Value, char Origin, char From, char To, int MaxDelay, int Model, int Operation, int Index){
-		this.Content = Content;
-		this.Key = Key;
-		this.Value = Value;
-		this.Origin = Origin;
-		this.From = From;
-		this.To = To;
-		this.MaxDelay = MaxDelay;
-		this.Model = Model;
-		this.Operation = Operation;
-		this.Index = Index;
-	}
-	
 	public String messageToString()
 	{
 		StringBuilder sb=new StringBuilder();
