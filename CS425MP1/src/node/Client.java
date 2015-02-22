@@ -69,43 +69,13 @@ public class Client extends Thread{
         channelC.start();
         channelD.start();        
         channelO.start();
+        
+        // TODO: read the input from a command file, then move all the "if origin == ' '" to here
+        // TODO: how to deal with input from both keyboard and file?
+        
+        
 	}
 	
-	// run the input command
-	public void runInput(String input){
-		HashMap<String, String> parsedOperation = new Utils().parseInputCommand(input);
-		
-		switch(parsedOperation.get("operation")){
-		case "send":
-			sendMessages(parsedOperation);			
-			break;
-		
-		}
-		
-	}
 	
-	// send a message to another machine
-	public void sendMessages(HashMap<String, String> parsedOperation){
-		String messageContent = parsedOperation.get("message");
-		String desitation = parsedOperation.get("destination");
-		// the message to be shown on the local machine
-		String clientMessage = "Sent \"" + messageContent + "\" to " + desitation + ", system time is " + System.currentTimeMillis();
-		System.out.println(clientMessage);
-		// the message to be sent
-		String serverMessage = "Received \"" + messageContent + "\" from " + index + " Max delay is " + String.valueOf(maxDelay) + " s, system time is " + System.currentTimeMillis();
-		
-		switch(desitation){
-		case "A":
-			channelA.putContents(serverMessage);break;
-		case "B":
-			channelB.putContents(serverMessage);break;
-		case "C":
-			channelC.putContents(serverMessage);break;
-		case "D":
-			channelD.putContents(serverMessage);break;
-		case "O":
-			channelO.putContents(serverMessage);break;
-		}
-	}
 	
 }

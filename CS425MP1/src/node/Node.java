@@ -6,10 +6,11 @@ import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map.Entry;
 
 import channel.Message;
 
@@ -23,7 +24,7 @@ public class Node {
 	HashMap<String, String> values;
 	HashMap<String, Date> timeStamps;
 	List<Message> messagesReceived;
-	List<Message> currentMessageQueue;
+
 	List<Message> messagesToBeSent;
 	boolean sent = false;
 	
@@ -59,7 +60,9 @@ public class Node {
 	
 			try {
 				while((input=br.readLine())!=null){
-					clientThread.runInput(input);					
+					// TODO: run it in Client or here??
+					
+					
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -100,7 +103,9 @@ public class Node {
 			
 		// Delete key ( == write)
 		case 1:
-			if(m.Origin == '\u0000'){	// If read the command from a text file, send it to the coordinator
+			if(index == 'O'){
+				sentToAllOthers(m);
+			}else if(m.Origin == '\u0000'){	// If read the command from a text file, send it to the coordinator
 				m.Origin = index;
 				m.Index = ++messageIndex;
 				sendToAnother(m, 'O');
@@ -108,6 +113,9 @@ public class Node {
 			}else{	// If receive the delete command from a coordinator, delete immediately
 				if(values.containsKey(m.Key)){
 					values.remove(m.Key);
+				}
+				if(timeStamps != null && timeStamps.containsKey(m.Key) == true){
+					timeStamps.remove(m.Key);
 				}
 				String displayContent = "Delete " + m.Key;
 				System.out.println(displayContent);
@@ -117,9 +125,11 @@ public class Node {
 			}
 			break;
 		
-		// Read a value
+		// Get a value
 		case 2:
-			if(m.Origin == '\u0000'){	// If read the command from a text file
+			if(index == 'O'){
+				sentToAllOthers(m);
+			}else if(m.Origin == '\u0000'){	// If read the command from a text file
 				m.Origin = index;
 				m.Index = ++messageIndex;
 				if(m.Model == 1){	// For sequential consistency, don't need to broadcast, directly read
@@ -177,6 +187,7 @@ public class Node {
 						}catch (ParseException e) {
 							e.printStackTrace();
 						}
+						
 						sent = false;
 						messagesReceived.clear();
 					}
@@ -186,24 +197,118 @@ public class Node {
 		
 		// Insert a key value pair
 		case 3:
-			if(m.Origin == '\u0000'){	// If read the command from a text file
+			if(index == 'O'){
+				sentToAllOthers(m);
+			}else if(m.Origin == '\u0000'){	// If read the command from a text file
 				m.Origin = index;
 				m.Index = ++messageIndex;
 				sendToAnother(m, 'O');
-			}else{
+			}else{	// If received from the coordinated
+				values.put(m.Key, m.Value);
+				if(m.Model == 2 || m.Model == 3){
+					timeStamps.put(m.Key, m.RealDeliverTime);
+				}
 				
+				String displayContent = "inserted key " + m.Key;
+				System.out.println(displayContent);
 				
-				
-				if(m.Origin == index){
+				if(m.Origin == index && m.Index == messageIndex){
 					sent = false;
 				}
 			}
+			break;
 			
+		// Update a key value pair
+		case 4:
+			if(index == 'O'){	// For the coordinator, send out the message to every node
+				sentToAllOthers(m);
+			}else if(m.Origin == '\u0000'){	// If read the command from a text file
+				m.Origin = index;
+				m.Index = ++messageIndex;
+				sendToAnother(m, 'O');
+			}else{	// If received from the coordinated
+				if(m.Origin == index){
+					String displayContent = "Key " + values.get(m.Key) + " updated to " + m.Value;
+					System.out.println(displayContent);
+					
+					values.put(m.Key, m.Value);
+					if(m.Model == 2 || m.Model == 3){
+						timeStamps.put(m.Key, m.RealDeliverTime);
+					}
+					
+					if(m.Index == messageIndex)
+						sent = false;
+				}else{
+					String displayContent = "Key " + m.Key + " changed from " + values.get(m.Key) + " to " + m.Value;
+					System.out.println(displayContent);
+					
+					values.put(m.Key, m.Value);
+					if(m.Model == 2 || m.Model == 3){
+						timeStamps.put(m.Key, m.RealDeliverTime);
+					}					
+				}
+			}
+			break;
+			
+		// Search
+		case 5:
+			if(m.Origin == '\u0000'){	// If read the command from a text file
+				m.Origin = index;
+				m.Index = ++messageIndex;
+				
+				sentToAllOthers(m);
+				sent = true;
+			}else{
+				if(m.Origin != index){	// If it's a request from another node, send back whether it contains the Key
+					if(values.containsKey(m.Key) == true){
+						m.Value = "True";
+					}else{
+						m.Value = "False";
+					}
+					sendToAnother(m, m.Origin);
+				}else if(m.Index == messageIndex){	// If it's a request from myself, count the number of keys
+					messagesReceived.add(m);
+					if(messagesReceived.size() == 3){
+						String displayContent = "";
+						if(values.containsKey(m.Key) == true){
+							displayContent += index + " ";
+						}
+						
+						for(Message currentMessage : messagesReceived){
+							if(m.Value == "True"){
+								displayContent += currentMessage.From + " ";
+							}
+						}
+						System.out.println(displayContent);
+
+						messagesReceived.clear();
+						sent = false;
+					}else{
+						messagesReceived.add(m);
+					}
+				}
+			}
+			break;
+			
+		// Delay
+		case 6:
+			int sleepTime = Integer.valueOf(m.Value);
+			try {
+				Thread.sleep((long)sleepTime*1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+			break;
+			
+		// Show all
+		case 7:
+			for(Entry<String, String> entry : values.entrySet()){
+				System.out.println(entry.getKey() + "," + entry.getValue());
+			}
+			break;
 			
 		}
-		
-		
-		
 	}
 	
 	
@@ -221,6 +326,46 @@ public class Node {
 			this.clientThread.channelD.putMessage(message.Content, message.Key, message.Value, message.Origin, index, 'D', message.MaxDelay, message.Model, message.Operation, message.Index);
 		}
 	}
+	
+	public List<Message> sentToKOthers(Message message, int K){
+		int count = 0;
+		List<Message> messagesToBeSent = new ArrayList<Message>();
+		
+		if(index!='A'){
+			if(count < K){
+				this.clientThread.channelA.putMessage(message.Content, message.Key, message.Value, message.Origin, index, 'A', message.MaxDelay, message.Model, message.Operation, message.Index);
+				K++;
+			}else{
+				messagesToBeSent.add(new Message(message.Content, message.Key, message.Value, message.Origin, index, 'A', message.MaxDelay, message.Model, message.Operation, message.Index));
+			}
+		}
+		if(index!='B'){
+			if(count < K){
+				this.clientThread.channelB.putMessage(message.Content, message.Key, message.Value, message.Origin, index, 'B', message.MaxDelay, message.Model, message.Operation, message.Index);
+				K++;
+			}else{
+				messagesToBeSent.add(new Message(message.Content, message.Key, message.Value, message.Origin, index, 'B', message.MaxDelay, message.Model, message.Operation, message.Index));
+			}		}
+		if(index!='C'){
+			if(count < K){
+				this.clientThread.channelC.putMessage(message.Content, message.Key, message.Value, message.Origin, index, 'C', message.MaxDelay, message.Model, message.Operation, message.Index);
+				K++;
+			}else{
+				messagesToBeSent.add(new Message(message.Content, message.Key, message.Value, message.Origin, index, 'C', message.MaxDelay, message.Model, message.Operation, message.Index));
+			}		
+		}
+		if(index!='D'){
+			if(count < K){
+				this.clientThread.channelD.putMessage(message.Content, message.Key, message.Value, message.Origin, index, 'D', message.MaxDelay, message.Model, message.Operation, message.Index);
+				K++;
+			}else{
+				messagesToBeSent.add(new Message(message.Content, message.Key, message.Value, message.Origin, index, 'D', message.MaxDelay, message.Model, message.Operation, message.Index));
+			}		
+		}
+		
+		return messagesToBeSent;
+	}
+	
 	
 	public void sendToAnother(Message message, char receiver){
 		if(receiver=='A'){

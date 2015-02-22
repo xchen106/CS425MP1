@@ -8,9 +8,9 @@ import java.util.Date;
 
 public class Message {
 	public String Content;
-	Date SentTime;
-	Date EstimatedDeliverTime;
-	Date RealDeliverTime;
+	public Date SentTime;
+	public Date EstimatedDeliverTime;
+	public Date RealDeliverTime;
 	public String Key;
 	public String Value;
 	public char From;
@@ -32,17 +32,12 @@ public class Message {
 	 * 2 -- get
 	 * 3 -- insert
 	 * 4 -- update
-	 * 5 -- delete (coordinator)
-	 * 6 -- get (coordinator)
-	 * 7 -- insert (coordinator)
-	 * 8 -- update (coordinator)
-	 * 9 -- search
-	 * 10-- has key or not
-	 * 11-- delay
-	 * 12-- show-all
+	 * 5 -- search
+	 * 6-- delay
+	 * 7-- show-all
 	 */
 	
-	// TODO repair ??????
+	// TODO: repair
 	
 	public int Operation;
 	
@@ -58,13 +53,13 @@ public class Message {
 		switch(op)
 		{
 		case "send": this.Operation=0;this.Content=parseResult[1];this.To=parseResult[2].charAt(0);break;
-		case "delete": this.Operation=5; this.Key=parseResult[1];this.Model = Integer.parseInt(parseResult[2]); break;
-		case "get": this.Operation=6; this.Key=parseResult[1];this.Value=parseResult[2]; this.Model = Integer.parseInt(parseResult[3]); break;
-		case "insert": this.Operation=7; this.Key=parseResult[1];this.Value=parseResult[2];this.Model = Integer.parseInt(parseResult[3]); break;
-		case "update": this.Operation=8; this.Key=parseResult[1];this.Value=parseResult[2];this.Model = Integer.parseInt(parseResult[3]); break;
-		case "search": this.Operation=9; this.Key=parseResult[1]; break;
-		case "delay": this.Operation=11; this.Value=parseResult[1];break;
-		case "show-all": this.Operation=12;break;
+		case "delete": this.Operation=1; this.Key=parseResult[1];this.Model = Integer.parseInt(parseResult[2]); break;
+		case "get": this.Operation=2; this.Key=parseResult[1];this.Value=parseResult[2]; this.Model = Integer.parseInt(parseResult[3]); break;
+		case "insert": this.Operation=3; this.Key=parseResult[1];this.Value=parseResult[2];this.Model = Integer.parseInt(parseResult[3]); break;
+		case "update": this.Operation=4; this.Key=parseResult[1];this.Value=parseResult[2];this.Model = Integer.parseInt(parseResult[3]); break;
+		case "search": this.Operation=5; this.Key=parseResult[1]; break;
+		case "delay": this.Operation=6; this.Value=parseResult[1];break;
+		case "show-all": this.Operation=7;break;
 		default: System.out.println("WRONG FORMAT OF INPUT!");
 		}
 		
