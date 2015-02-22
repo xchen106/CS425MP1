@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.text.ParseException;
 import java.util.ArrayDeque;
 import java.util.Date;
 import java.util.concurrent.Semaphore;
@@ -34,7 +35,7 @@ public class DelayedChannel extends Thread{
 	/*
 	 * The put method for all the contents
 	 */
-	public void putContents(String c)
+	public void putCommands(String c)
 	{
 		Message m=new Message(c);
 				
@@ -45,7 +46,14 @@ public class DelayedChannel extends Thread{
 		CurrentCount.release();
 		
 	}
-	
+	public void putMessageString(String c) throws ParseException
+	{
+		Message m= new Message();
+		m.stringToMessage(c);
+		Contents.add(m);
+		//notify the blocking thread
+		CurrentCount.release();
+	}
 	/*
 	 * The put method for the whole message
 	 */
