@@ -99,9 +99,8 @@ public class Node {
 				if(values.containsKey(m.Key)){
 					values.remove(m.Key);
 				}
-				if(timeStamps != null && timeStamps.containsKey(m.Key) == true){
-					timeStamps.remove(m.Key);
-				}
+				timeStamps.put(m.Key, m.RealDeliverTime);
+				
 				String displayContent = "Delete " + m.Key;
 				System.out.println(displayContent);
 				if(m.Origin == index){
