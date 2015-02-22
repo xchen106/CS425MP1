@@ -45,7 +45,7 @@ public class Server extends Thread{
             	throw new RuntimeException("Error connecting", e);
             }
             // start a new thread to handle the request
-            new Thread(new Listener(clientSocket)).start();
+            new Thread(new Listener(clientSocket, this.node)).start();
         }
         
 	}

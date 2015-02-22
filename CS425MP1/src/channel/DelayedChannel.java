@@ -50,24 +50,12 @@ public class DelayedChannel extends Thread{
 	{
 		Message m= new Message();
 		m.stringToMessage(c);
+		m.setSentTime();
+		m.setEstimatedDeliverTime(MaxDelay);
 		Contents.add(m);
 		//notify the blocking thread
 		CurrentCount.release();
 	}
-	/*
-	 * The put method for the whole message
-	 */
-	
-	public void putMessage(String Content, String Key, String Value, char Origin, char From, char To, int MaxDelay, int Model, int Operation, int Index){
-		Message m = new Message(Content, Key, Value, Origin, From, To, MaxDelay, Model, Operation, Index);
-		
-		m.setSentTime();
-		m.setEstimatedDeliverTime(MaxDelay);
-		//notify the blocking thread
-		CurrentCount.release();
-		
-	}
-	
 	
 	
 	/*

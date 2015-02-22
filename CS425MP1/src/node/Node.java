@@ -66,7 +66,7 @@ public class Node {
 	}
 	
 	
-	public void handleMessage(Message m) {
+	public void handleMessage(Message m) throws ParseException {
 		int operation = m.Operation;
 		
 		switch(operation){
@@ -99,9 +99,8 @@ public class Node {
 				if(values.containsKey(m.Key)){
 					values.remove(m.Key);
 				}
-				if(timeStamps != null && timeStamps.containsKey(m.Key) == true){
-					timeStamps.remove(m.Key);
-				}
+				timeStamps.put(m.Key, m.RealDeliverTime);
+				
 				String displayContent = "Delete " + m.Key;
 				System.out.println(displayContent);
 				if(m.Origin == index){
@@ -180,25 +179,48 @@ public class Node {
 			break;
 		
 		// Insert a key value pair
-			// eventual consistent : directly send to other
+		// eventual consistent : directly send to other
 		case 3:
 			if(index == 'O'){
 				sentToAllOthers(m);
 			}else if(m.Origin == '\u0000'){	// If read the command from a text file
 				m.Origin = index;
 				m.Index = ++messageIndex;
-				sendToAnother(m, 'O');
-			}else{	// If received from the coordinated
+				
+				if(m.Model == 0 || m.Model == 1){	// If it's linearnizability or sequential consistent
+					sendToAnother(m, 'O');
+				}else{	// If it's eventual consistent
+					sentToAllOthers(m);
+				}		
+				
+			}else if(m.Model == 1 || m.Model == 0){	// If received a message and it's linearizability or sequential consistent
 				values.put(m.Key, m.Value);
-				if(m.Model == 2 || m.Model == 3){
-					timeStamps.put(m.Key, m.RealDeliverTime);
-				}
 				
 				String displayContent = "inserted key " + m.Key;
 				System.out.println(displayContent);
 				
 				if(m.Origin == index && m.Index == messageIndex){
 					sent = false;
+				}
+			}else{ // If received as eventual consistent
+				
+				if(m.Origin == index && m.Index == messageIndex){	// If it's a current write request from myself
+					messagesReceived.add(m);
+					if(messagesReceived.size() == m.Model - 1){
+						values.put(m.Key, m.Value);
+						timeStamps.put(m.Key, m.RealDeliverTime);
+						messagesReceived.clear();
+						
+						String displayContent = "inserted key " + m.Key;
+						System.out.println(displayContent);
+					}
+					
+				}else if(m.Origin != index){	// If it's a write request from other nodes
+					values.put(m.Key, m.Value);
+					timeStamps.put(m.Key, m.RealDeliverTime);
+					
+					String displayContent = "inserted key " + m.Key;
+					System.out.println(displayContent);
 				}
 			}
 			break;
@@ -210,16 +232,19 @@ public class Node {
 			}else if(m.Origin == '\u0000'){	// If read the command from a text file
 				m.Origin = index;
 				m.Index = ++messageIndex;
-				sendToAnother(m, 'O');
-			}else{	// If received from the coordinated
+				
+				if(m.Model == 0 || m.Model == 1){	// If it's linearnizability or sequential consistent
+					sendToAnother(m, 'O');
+				}else{	// If it's eventual consistent
+					sentToAllOthers(m);
+				}
+				
+			}else if(m.Model == 1 || m.Model == 0){	// If received a message and it's linearizability or sequential consistent
 				if(m.Origin == index){
 					String displayContent = "Key " + values.get(m.Key) + " updated to " + m.Value;
 					System.out.println(displayContent);
 					
 					values.put(m.Key, m.Value);
-					if(m.Model == 2 || m.Model == 3){
-						timeStamps.put(m.Key, m.RealDeliverTime);
-					}
 					
 					if(m.Index == messageIndex)
 						sent = false;
@@ -227,11 +252,31 @@ public class Node {
 					String displayContent = "Key " + m.Key + " changed from " + values.get(m.Key) + " to " + m.Value;
 					System.out.println(displayContent);
 					
-					values.put(m.Key, m.Value);
-					if(m.Model == 2 || m.Model == 3){
-						timeStamps.put(m.Key, m.RealDeliverTime);
-					}					
+					values.put(m.Key, m.Value);				
 				}
+			}else{	 // If received as eventual consistent
+				if(m.Origin == index && m.Index == messageIndex){	// If it's a current write request from myself
+					messagesReceived.add(m);
+					if(messagesReceived.size() == m.Model - 1){
+						String displayContent = "Key " + values.get(m.Key) + " updated to " + m.Value;
+						System.out.println(displayContent);
+						
+						values.put(m.Key, m.Value);
+						timeStamps.put(m.Key, m.RealDeliverTime);
+						messagesReceived.clear();
+						
+						sent = false;
+					}
+					
+				}else if(m.Origin != index){	// If it's a write request from other nodes
+					String displayContent = "Key " + m.Key + " changed from " + values.get(m.Key) + " to " + m.Value;
+					System.out.println(displayContent);
+					
+					values.put(m.Key, m.Value);
+					timeStamps.put(m.Key, m.RealDeliverTime);
+				}
+				
+				
 			}
 			break;
 			
@@ -267,8 +312,6 @@ public class Node {
 
 						messagesReceived.clear();
 						sent = false;
-					}else{
-						messagesReceived.add(m);
 					}
 				}
 			}
@@ -300,54 +343,66 @@ public class Node {
 	}
 	
 	
-	public void sentToAllOthers(Message message){
+	public void sentToAllOthers(Message message) throws ParseException{
+		message.From = index;
 		if(index!='A'){
-			this.clientThread.channelA.putMessage(message.Content, message.Key, message.Value, message.Origin, index, 'A', message.MaxDelay, message.Model, message.Operation, message.Index);
+			message.To = 'A';
+			this.clientThread.channelA.putMessageString(message.messageToString());
 		}
 		if(index!='B'){
-			this.clientThread.channelB.putMessage(message.Content, message.Key, message.Value, message.Origin, index, 'B', message.MaxDelay, message.Model, message.Operation, message.Index);
+			message.To = 'B';
+			this.clientThread.channelB.putMessageString(message.messageToString());
 		}
 		if(index!='C'){
-			this.clientThread.channelC.putMessage(message.Content, message.Key, message.Value, message.Origin, index, 'C', message.MaxDelay, message.Model, message.Operation, message.Index);
+			message.To = 'C';
+			this.clientThread.channelC.putMessageString(message.messageToString());
 		}
 		if(index!='D'){
-			this.clientThread.channelD.putMessage(message.Content, message.Key, message.Value, message.Origin, index, 'D', message.MaxDelay, message.Model, message.Operation, message.Index);
+			message.To = 'D';
+			this.clientThread.channelD.putMessageString(message.messageToString());
 		}
 	}
 	
-	public List<Message> sentToKOthers(Message message, int K){
+	public List<Message> sentToKOthers(Message message, int K) throws ParseException{
 		int count = 0;
 		List<Message> messagesToBeSent = new ArrayList<Message>();
-		
+
+
+		message.From = index;
 		if(index!='A'){
 			if(count < K){
-				this.clientThread.channelA.putMessage(message.Content, message.Key, message.Value, message.Origin, index, 'A', message.MaxDelay, message.Model, message.Operation, message.Index);
+				message.To = 'A';
+				this.clientThread.channelA.putMessageString(message.messageToString());
 				K++;
 			}else{
-				messagesToBeSent.add(new Message(message.Content, message.Key, message.Value, message.Origin, index, 'A', message.MaxDelay, message.Model, message.Operation, message.Index));
+				messagesToBeSent.add(new Message().stringToMessage(message.messageToString()));
 			}
 		}
 		if(index!='B'){
 			if(count < K){
-				this.clientThread.channelB.putMessage(message.Content, message.Key, message.Value, message.Origin, index, 'B', message.MaxDelay, message.Model, message.Operation, message.Index);
+				message.To = 'B';
+				this.clientThread.channelB.putMessageString(message.messageToString());
 				K++;
 			}else{
-				messagesToBeSent.add(new Message(message.Content, message.Key, message.Value, message.Origin, index, 'B', message.MaxDelay, message.Model, message.Operation, message.Index));
-			}		}
+				messagesToBeSent.add(new Message().stringToMessage(message.messageToString()));
+			}		
+		}
 		if(index!='C'){
 			if(count < K){
-				this.clientThread.channelC.putMessage(message.Content, message.Key, message.Value, message.Origin, index, 'C', message.MaxDelay, message.Model, message.Operation, message.Index);
+				message.To = 'C';
+				this.clientThread.channelC.putMessageString(message.messageToString());
 				K++;
 			}else{
-				messagesToBeSent.add(new Message(message.Content, message.Key, message.Value, message.Origin, index, 'C', message.MaxDelay, message.Model, message.Operation, message.Index));
-			}		
+				messagesToBeSent.add(new Message().stringToMessage(message.messageToString()));
+			}	
 		}
 		if(index!='D'){
 			if(count < K){
-				this.clientThread.channelD.putMessage(message.Content, message.Key, message.Value, message.Origin, index, 'D', message.MaxDelay, message.Model, message.Operation, message.Index);
+				message.To = 'D';
+				this.clientThread.channelD.putMessageString(message.messageToString());
 				K++;
 			}else{
-				messagesToBeSent.add(new Message(message.Content, message.Key, message.Value, message.Origin, index, 'D', message.MaxDelay, message.Model, message.Operation, message.Index));
+				messagesToBeSent.add(new Message().stringToMessage(message.messageToString()));
 			}		
 		}
 		
@@ -355,21 +410,26 @@ public class Node {
 	}
 	
 	
-	public void sendToAnother(Message message, char receiver){
+	public void sendToAnother(Message message, char receiver) throws ParseException{
 		if(receiver=='A'){
-			this.clientThread.channelA.putMessage(message.Content, message.Key, message.Value, message.Origin, index, 'A', message.MaxDelay, message.Model, message.Operation, message.Index);
+			message.To = 'A';
+			this.clientThread.channelA.putMessageString(message.messageToString());		
 		}
 		if(receiver=='B'){
-			this.clientThread.channelB.putMessage(message.Content, message.Key, message.Value, message.Origin, index, 'B', message.MaxDelay, message.Model, message.Operation, message.Index);
+			message.To = 'B';
+			this.clientThread.channelB.putMessageString(message.messageToString());		
 		}
 		if(receiver=='C'){
-			this.clientThread.channelC.putMessage(message.Content, message.Key, message.Value, message.Origin, index, 'C', message.MaxDelay, message.Model, message.Operation, message.Index);
+			message.To = 'C';
+			this.clientThread.channelC.putMessageString(message.messageToString());		
 		}
 		if(receiver=='D'){
-			this.clientThread.channelD.putMessage(message.Content, message.Key, message.Value, message.Origin, index, 'D', message.MaxDelay, message.Model, message.Operation, message.Index);
+			message.To = 'D';
+			this.clientThread.channelD.putMessageString(message.messageToString());		
 		}
 		if(receiver=='O'){
-			this.clientThread.channelO.putMessage(message.Content, message.Key, message.Value, message.Origin, index, 'O', message.MaxDelay, message.Model, message.Operation, message.Index);
+			message.To = 'O';
+			this.clientThread.channelO.putMessageString(message.messageToString());	
 		}
 	}
 	

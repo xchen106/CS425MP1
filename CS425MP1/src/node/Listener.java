@@ -5,13 +5,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.text.ParseException;
+
+import channel.Message;
 
 public class Listener implements Runnable{
 	
 	protected Socket clientSocket = null;
+	Node node;
 
-	public Listener(Socket clientSocket){
+	public Listener(Socket clientSocket, Node node){
 		this.clientSocket = clientSocket;
+		this.node = node;
 	}
 	
 	public void run(){
@@ -27,19 +32,21 @@ public class Listener implements Runnable{
 		
 	}
 	
-	// save key-value pair ??
-	// output message ??
+	// handle received message
 	public void handle(Socket clientSocket){
         try {
         	InputStream input = clientSocket.getInputStream();
 			InputStreamReader inputReader = new InputStreamReader(input);
             BufferedReader bufferReader = new BufferedReader(inputReader);
-            String line = bufferReader.readLine();
+            String string = bufferReader.readLine();
+			Message m = new Message();
 			
-			System.out.println(line);
-			
+			m.stringToMessage(string);
+			this.node.handleMessage(m);
 			
 		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ParseException e) {
 			e.printStackTrace();
 		}
 	}
