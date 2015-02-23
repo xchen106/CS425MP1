@@ -23,11 +23,15 @@ public class DelayedChannel extends Thread{
 	Semaphore CurrentCount;
 	//Writer for output to channel
 	BufferedWriter out;
+	
+	String hostname;
+	String portnum;
+	
 	public DelayedChannel(String hostname, String portnum, int max) throws NumberFormatException, UnknownHostException, IOException
 	{
 		super("DelayedChannel");
-		MySocket =new Socket(hostname, Integer.parseInt(portnum));
-		out= new BufferedWriter(new OutputStreamWriter(MySocket.getOutputStream()));
+		this.hostname = hostname;
+		this.portnum = portnum;
 		MaxDelay=max;
 		Contents= new ArrayDeque<Message>();
 		CurrentCount=new Semaphore(0);
@@ -78,6 +82,9 @@ public class DelayedChannel extends Thread{
 		while(true)
 		{
 			try {
+				MySocket =new Socket(hostname, Integer.parseInt(portnum));
+				out= new BufferedWriter(new OutputStreamWriter(MySocket.getOutputStream()));
+				
 				//Block when empty
 				CurrentCount.acquire();
 				//get Message out from the queue
@@ -93,7 +100,6 @@ public class DelayedChannel extends Thread{
 				//send the message
 				out.write(m.messageToString()+"\n");
 				out.flush();
-				
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			} catch (IOException e) {

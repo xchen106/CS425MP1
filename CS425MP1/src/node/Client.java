@@ -141,6 +141,7 @@ public class Client extends Thread{
 			this.node.handleMessage(m);
 		} catch (ParseException e) {
 			e.printStackTrace();
+			handleInputMessage(messageLine);
 		}
     }
 	

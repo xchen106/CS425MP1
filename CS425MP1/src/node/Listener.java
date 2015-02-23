@@ -38,6 +38,7 @@ public class Listener implements Runnable{
         	InputStream input = clientSocket.getInputStream();
 			InputStreamReader inputReader = new InputStreamReader(input);
             BufferedReader bufferReader = new BufferedReader(inputReader);
+            // TODO: while(true)
             String string = bufferReader.readLine();
 			Message m = new Message().stringToMessage(string);
 			m.setRealDeliverTime();
