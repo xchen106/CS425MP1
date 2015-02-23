@@ -78,14 +78,20 @@ public class Message {
 		sb.append(Operation).append(";");
 		sb.append(Index).append(";");
 		DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		sb.append(formatter.format(SentTime)).append(";");
-		sb.append(formatter.format(EstimatedDeliverTime)).append(";");
-		sb.append(formatter.format(RealDeliverTime));
+		if(SentTime != null)
+			sb.append(formatter.format(SentTime));
+		sb.append(";");
+		if(EstimatedDeliverTime != null)
+			sb.append(formatter.format(EstimatedDeliverTime));
+		sb.append(";");
+		if(RealDeliverTime != null)
+			sb.append(formatter.format(RealDeliverTime));
 		return sb.toString();
 	}
 	public Message stringToMessage(String s) throws ParseException
 	{
-		String[] ss=s.split(";");
+		String[] ss=s.split(";", -1);
+		
 		Message m=new Message();
 		m.Content=ss[0];
 		m.Key=ss[1];
@@ -97,11 +103,14 @@ public class Message {
 		m.Operation=Integer.parseInt(ss[7]);
 		m.Index=Integer.parseInt(ss[8]);
 		DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		m.SentTime=formatter.parse(ss[9]);
-		m.EstimatedDeliverTime=formatter.parse(ss[10]);
-		m.RealDeliverTime=formatter.parse(ss[11]);
-		return m;
+		if(ss[9]!=null && ss[9].equals("")==false) m.SentTime=formatter.parse(ss[9]);
+		else m.SentTime = null;
+		if(ss[10]!=null && ss[10].equals("")==false) m.EstimatedDeliverTime=formatter.parse(ss[10]);
+		else m.EstimatedDeliverTime = null;
+		if(ss[11]!=null && ss[11].equals("")==false) m.RealDeliverTime=formatter.parse(ss[11]);
+		else m.RealDeliverTime = null;
 		
+		return m;
 	}
 	public void setSentTime()
 	{

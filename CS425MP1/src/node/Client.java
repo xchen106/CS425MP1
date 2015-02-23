@@ -45,6 +45,7 @@ public class Client extends Thread{
     
     public Client(HashMap<String, String> configuration, char index, Node node){
     	this.index = index;
+    	this.node = node;
     	this.serverAddressA = configuration.get("serverAddressA");
         serverAddressB = configuration.get("serverAddressB");
         serverAddressC = configuration.get("serverAddressC");
@@ -80,55 +81,67 @@ public class Client extends Thread{
         
         
         // Print a menu
-        while(true){
-        	System.out.println("Select your input type: \n(1) Input from keyboard\n(2) Input from file\n");
-        	BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        	
-        	int option = 0;
-        	try {
-				option = Integer.valueOf(br.readLine());
-			
-	        	if(option == 1){	// read from screen input
-	        		String messageLine = br.readLine();
-	        		handleInputMessage(messageLine);
-	        		// Wait until the message 
-	        		while(this.node.sent == true);
-	        	}else{				// read from file input
-	        		String fileLocation = br.readLine();
-	        		Path path = Paths.get(fileLocation);
-	        		Charset charset = Charset.forName("US-ASCII");
-	        		BufferedReader reader = Files.newBufferedReader(path, charset);
-	        		
-	        		String messageLine = null;
+    	BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+    	while(true){
+    		try{
+	        	System.out.println("\nSelect your input type: \n(1) Input from keyboard\n(2) Input from file\n");
+	        	
+	        	int option = 0;
+	        	try {
+	        		option = Integer.valueOf(br.readLine());
+	        	} catch (NumberFormatException e1) {
+	    			e1.printStackTrace();
+	    			continue;
+	    		}
+	        	
+	        	
+		       	if(option == 1){	// read from screen input
+		        	String messageLine = br.readLine();
+		        	handleInputMessage(messageLine);
+		       		// Wait until the message 
+		       		while(this.node.sent == true){
+		       			System.out.print(".");
+		       			Thread.sleep(100);
+		       		};
+		       		System.out.println();
+		       		
+		       	}else{				// read from file input
+		       		String fileLocation = br.readLine();
+		       		Path path = Paths.get(fileLocation);
+		       		Charset charset = Charset.forName("US-ASCII");
+		       		BufferedReader reader = Files.newBufferedReader(path, charset);
+		        		
+		       		String messageLine = null;
 	        		while ((messageLine = reader.readLine()) != null) {
-		        		handleInputMessage(messageLine);
-		        		// Wait until the message
-		    	        while(this.node.sent == true);
-	        		}   
-
-	        	}
-        	
-        	} catch (NumberFormatException e1) {
+	        			handleInputMessage(messageLine);
+			        	// Wait until the message
+	        			while(this.node.sent == true){
+			       			System.out.print(".");
+			       			Thread.sleep(100);
+			       		};
+			       		System.out.println();
+		       		}   
+		       	}
+			}  catch (IOException e1) {
 				e1.printStackTrace();
-			} catch (IOException e1) {
-				e1.printStackTrace();
+				continue;
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
-			
-		}
-        
-        
+        	
+        }
 	}
 	
 	
 	// handle the input message from either keyboard or file
 	public void handleInputMessage(String messageLine){
 		Message m = new Message(messageLine);
+		this.node.sent = true;
 		try {
 			this.node.handleMessage(m);
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
-		this.node.sent = true;
     }
 	
 }

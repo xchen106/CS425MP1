@@ -28,7 +28,7 @@ public class Node {
 	
 	
 	public static void main(String[] args){
-		new Node().initialization("accessories/configuration", args[0].charAt(0));
+		new Node().initialization("./accessories/configuration", args[0].charAt(0));
 	}
 	
 	
@@ -68,8 +68,8 @@ public class Node {
 		switch(operation){
 		// Sent text messages
 		case 0:
-			if(m.Key == null){	// if sending a message
-				String displayContent = "Sent \"" + m.Content +"\" to " + m.To + ", system time is " + System.currentTimeMillis();
+			if(m.Key == null || m.Key.length()==0){	// if sending a message
+				String displayContent = "Sent \"" + m.Content +"\" to " + m.To + ", system time is " + new Date();
 				m.Key = "receive";
 				m.From = index;
 				m.Origin = index;
@@ -78,7 +78,7 @@ public class Node {
 				System.out.println(displayContent);
 				sent = false;
 			}else{	// if receiving a message
-				String displayContent = "Received \"" + m.Content + "\" from " + m.Origin + ", Max delay is " + m.MaxDelay + " s, system time is " + System.currentTimeMillis();
+				String displayContent = "Received \"" + m.Content + "\" from " + m.Origin + ", Max delay is " + m.MaxDelay + " s, system time is " + new Date();
 				System.out.println(displayContent);
 			}
 			break;
@@ -178,10 +178,15 @@ public class Node {
 		// eventual consistent : directly send to other
 		case 3:
 			if(index == 'O'){
+				System.out.println("received a request");
 				sentToAllOthers(m);
 			}else if(m.Origin == '\u0000'){	// If read the command from a text file
 				m.Origin = index;
 				m.Index = ++messageIndex;
+				
+				
+				System.out.println(m.messageToString());
+
 				
 				if(m.Model == 0 || m.Model == 1){	// If it's linearnizability or sequential consistent
 					sendToAnother(m, 'O');
@@ -197,6 +202,7 @@ public class Node {
 				
 				if(m.Origin == index && m.Index == messageIndex){
 					sent = false;
+					System.out.println("set to false!!!");
 				}
 			}else{ // If received as eventual consistent
 				

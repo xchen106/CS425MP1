@@ -39,9 +39,9 @@ public class Listener implements Runnable{
 			InputStreamReader inputReader = new InputStreamReader(input);
             BufferedReader bufferReader = new BufferedReader(inputReader);
             String string = bufferReader.readLine();
-			Message m = new Message();
+			Message m = new Message().stringToMessage(string);
+			m.setRealDeliverTime();
 			
-			m.stringToMessage(string);
 			this.node.handleMessage(m);
 			
 		} catch (IOException e) {

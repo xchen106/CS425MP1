@@ -39,6 +39,7 @@ public class DelayedChannel extends Thread{
 	{
 		Message m=new Message(c);
 				
+		m.MaxDelay = MaxDelay;
 		m.setSentTime();
 		m.setEstimatedDeliverTime(MaxDelay);
 		Contents.add(m);
@@ -48,8 +49,18 @@ public class DelayedChannel extends Thread{
 	}
 	public void putMessageString(String c) throws ParseException
 	{
-		Message m= new Message();
-		m.stringToMessage(c);
+		Message m = new Message().stringToMessage(c);
+		
+		m.MaxDelay = MaxDelay;
+		m.setSentTime();
+		m.setEstimatedDeliverTime(MaxDelay);
+		Contents.add(m);
+		//notify the blocking thread
+		CurrentCount.release();
+	}
+	
+	public void putMessage(Message m){
+		m.MaxDelay = MaxDelay;
 		m.setSentTime();
 		m.setEstimatedDeliverTime(MaxDelay);
 		Contents.add(m);
@@ -80,7 +91,7 @@ public class DelayedChannel extends Thread{
 					Thread.sleep(milisecond);
 				}
 				//send the message
-				out.write(m.Content+"\n");
+				out.write(m.messageToString()+"\n");
 				out.flush();
 				
 			} catch (InterruptedException e) {
