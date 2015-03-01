@@ -20,10 +20,10 @@ public class Message {
 	public int Index;
 
 	/**
-	 * 0 -- linearizable
-	 * 1 -- sequential
-	 * 2 -- event W1 R1
-	 * 3 -- event W2 R2
+	 * 1 -- linearizable
+	 * 2 -- sequential
+	 * 3 -- event W1 R1
+	 * 4 -- event W2 R2
 	 */
 	public int Model;
 	/**
@@ -53,8 +53,8 @@ public class Message {
 		switch(op)
 		{
 		case "send": this.Operation=0;this.Content=parseResult[1];this.To=parseResult[2].charAt(0);break;
-		case "delete": this.Operation=1; this.Key=parseResult[1];this.Model = Integer.parseInt(parseResult[2]); break;
-		case "get": this.Operation=2; this.Key=parseResult[1];this.Value=parseResult[2]; this.Model = Integer.parseInt(parseResult[3]); break;
+		case "delete": this.Operation=1; this.Key=parseResult[1]; break;
+		case "get": this.Operation=2; this.Key=parseResult[1]; this.Model = Integer.parseInt(parseResult[2]); break;
 		case "insert": this.Operation=3; this.Key=parseResult[1];this.Value=parseResult[2];this.Model = Integer.parseInt(parseResult[3]); break;
 		case "update": this.Operation=4; this.Key=parseResult[1];this.Value=parseResult[2];this.Model = Integer.parseInt(parseResult[3]); break;
 		case "search": this.Operation=5; this.Key=parseResult[1]; break;
@@ -76,6 +76,7 @@ public class Message {
 		sb.append(To).append(";");
 		sb.append(MaxDelay).append(";");
 		sb.append(Operation).append(";");
+		sb.append(Model).append(";");
 		sb.append(Index).append(";");
 		DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		if(SentTime != null)
@@ -101,13 +102,14 @@ public class Message {
 		m.To=ss[5].charAt(0);
 		m.MaxDelay=Integer.parseInt(ss[6]);
 		m.Operation=Integer.parseInt(ss[7]);
-		m.Index=Integer.parseInt(ss[8]);
+		m.Model=Integer.parseInt(ss[8]);
+		m.Index=Integer.parseInt(ss[9]);
 		DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		if(ss[9]!=null && ss[9].equals("")==false) m.SentTime=formatter.parse(ss[9]);
+		if(ss[10]!=null && ss[10].equals("")==false) m.SentTime=formatter.parse(ss[10]);
 		else m.SentTime = null;
-		if(ss[10]!=null && ss[10].equals("")==false) m.EstimatedDeliverTime=formatter.parse(ss[10]);
+		if(ss[11]!=null && ss[11].equals("")==false) m.EstimatedDeliverTime=formatter.parse(ss[11]);
 		else m.EstimatedDeliverTime = null;
-		if(ss[11]!=null && ss[11].equals("")==false) m.RealDeliverTime=formatter.parse(ss[11]);
+		if(ss[12]!=null && ss[12].equals("")==false) m.RealDeliverTime=formatter.parse(ss[12]);
 		else m.RealDeliverTime = null;
 		
 		return m;

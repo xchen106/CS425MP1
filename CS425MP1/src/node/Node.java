@@ -36,6 +36,8 @@ public class Node {
 		this.index = index;
 		this.messageIndex = -1;
 		this.values = new HashMap<String, String>();
+		this.timeStamps = new HashMap<String, Date>();
+		this.messagesReceived = new ArrayList<Message>();
 		
 		// read the addresses and port numbers from the configuration file
 		HashMap<String, String> configuration = new Utils().parseConfigure(configurationFile);
@@ -94,8 +96,8 @@ public class Node {
 			}else{	// If receive the delete command from a coordinator, delete immediately
 				if(values.containsKey(m.Key)){
 					values.remove(m.Key);
+					timeStamps.put(m.Key, m.RealDeliverTime);
 				}
-				timeStamps.put(m.Key, m.RealDeliverTime);
 				
 				String displayContent = "Delete " + m.Key;
 				System.out.println(displayContent);
@@ -184,17 +186,15 @@ public class Node {
 				m.Origin = index;
 				m.Index = ++messageIndex;
 				
-				
 				System.out.println(m.messageToString());
-
 				
-				if(m.Model == 0 || m.Model == 1){	// If it's linearnizability or sequential consistent
+				if(m.Model == 1 || m.Model == 2){	// If it's linearnizability or sequential consistent
 					sendToAnother(m, 'O');
 				}else{	// If it's eventual consistent
 					sentToAllOthers(m);
 				}		
 				
-			}else if(m.Model == 1 || m.Model == 0){	// If received a message and it's linearizability or sequential consistent
+			}else if(m.Model == 1 || m.Model == 2){	// If received a message and it's linearizability or sequential consistent
 				values.put(m.Key, m.Value);
 				
 				String displayContent = "inserted key " + m.Key;
@@ -202,19 +202,18 @@ public class Node {
 				
 				if(m.Origin == index && m.Index == messageIndex){
 					sent = false;
-					System.out.println("set to false!!!");
 				}
-			}else{ // If received as eventual consistent
-				
+			}else{ // If received as eventual consistent				
 				if(m.Origin == index && m.Index == messageIndex){	// If it's a current write request from myself
 					messagesReceived.add(m);
-					if(messagesReceived.size() == m.Model - 1){
+					if(messagesReceived.size() == m.Model - 2){
 						values.put(m.Key, m.Value);
 						timeStamps.put(m.Key, m.RealDeliverTime);
 						messagesReceived.clear();
 						
 						String displayContent = "inserted key " + m.Key;
 						System.out.println(displayContent);
+						sent = false;
 					}
 					
 				}else if(m.Origin != index){	// If it's a write request from other nodes
@@ -223,6 +222,7 @@ public class Node {
 					
 					String displayContent = "inserted key " + m.Key;
 					System.out.println(displayContent);
+					sendToAnother(m, m.Origin);
 				}
 			}
 			break;
@@ -276,6 +276,7 @@ public class Node {
 					
 					values.put(m.Key, m.Value);
 					timeStamps.put(m.Key, m.RealDeliverTime);
+					sendToAnother(m, m.Origin);
 				}
 				
 				
@@ -413,6 +414,7 @@ public class Node {
 	
 	
 	public void sendToAnother(Message message, char receiver) throws ParseException{
+		message.From = index;
 		if(receiver=='A'){
 			message.To = 'A';
 			this.clientThread.channelA.putMessageString(message.messageToString());		

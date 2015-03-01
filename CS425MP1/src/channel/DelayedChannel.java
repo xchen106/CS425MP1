@@ -32,6 +32,7 @@ public class DelayedChannel extends Thread{
 		super("DelayedChannel");
 		this.hostname = hostname;
 		this.portnum = portnum;
+		
 		MaxDelay=max;
 		Contents= new ArrayDeque<Message>();
 		CurrentCount=new Semaphore(0);
