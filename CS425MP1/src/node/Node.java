@@ -77,12 +77,12 @@ public class Node {
 				m.Origin = index;
 				m.Index = messageIndex;
 				sendToAnother(m, m.To);
-				System.out.println(displayContent);
+				System.out.println("\n"+displayContent);
 				messageIndex++;
 				sent = false;
 			}else{	// if receiving a message
 				String displayContent = "Received \"" + m.Content + "\" from " + m.Origin + ", Max delay is " + m.MaxDelay + " s, system time is " + new Date();
-				System.out.println(displayContent);
+				System.out.println("\n"+displayContent);
 			}
 			break;
 			
@@ -101,10 +101,11 @@ public class Node {
 				}
 				
 				String displayContent = "Delete " + m.Key;
-				System.out.println(displayContent);
+				System.out.println("\n"+displayContent);
 				if(m.Origin == index && m.Index == messageIndex){
-					sent = false;
+					
 					messageIndex++;
+					sent = false;
 				}
 			}
 			break;
@@ -123,9 +124,10 @@ public class Node {
 					}else{
 						displayContent += "null";
 					}
-					System.out.println(displayContent);
-					sent = false;
+					System.out.println("\n"+displayContent);
+					
 					messageIndex++;
+					sent = false;
 				}else if(m.Model == 1){	// For linearizability, send it to the coordinator
 					sendToAnother(m, 'O');
 				}else{	// For eventual consistency, send the message request to all other nodes
@@ -138,10 +140,10 @@ public class Node {
 				}else{
 					displayContent += "null";
 				}
-				System.out.println(displayContent);
+				System.out.println("\n"+displayContent);
 
-				sent = false;
 				messageIndex++;
+				sent = false;
 			}else if(m.Model == 3 || m.Model == 4){	// If it's an eventually consistent request
 				if(m.Origin != index){	// If it's a request from another node, send back the value and timestamp
 					m.Value = values.get(m.Key);
@@ -174,14 +176,14 @@ public class Node {
 							}
 							displayContent += ">";
 							displayContent  = "get(" + m.Key + ") = (" + latestValue + "," + latestTimeStamp + ")," + "examed = " + displayContent;
-							System.out.println(displayContent);
+							System.out.println("\n"+displayContent);
 						}catch (ParseException e) {
 							e.printStackTrace();
 						}
 						
-						sent = false;
 						messageIndex++;
 						messagesReceived.clear();
+						sent = false;
 					}
 				}
 			}
@@ -209,11 +211,11 @@ public class Node {
 				values.put(m.Key, m.Value);
 				
 				String displayContent = "inserted key " + m.Key;
-				System.out.println(displayContent);
+				System.out.println("\n"+displayContent);
 				
 				if(m.Origin == index && m.Index == messageIndex){
-					sent = false;
 					messageIndex++;
+					sent = false;
 				}
 			}else{ // If received as eventual consistent				
 				if(m.Origin == index && m.Index == messageIndex){	// If it's a current write request from myself
@@ -224,9 +226,9 @@ public class Node {
 						messagesReceived.clear();
 						
 						String displayContent = "inserted key " + m.Key;
-						System.out.println(displayContent);
-						sent = false;
+						System.out.println("\n"+displayContent);
 						messageIndex++;
+						sent = false;
 					}
 					
 				}else if(m.Origin != index){	// If it's a write request from other nodes
@@ -234,7 +236,7 @@ public class Node {
 					timeStamps.put(m.Key, m.RealDeliverTime);
 					
 					String displayContent = "inserted key " + m.Key;
-					System.out.println(displayContent);
+					System.out.println("\n"+displayContent);
 					sendToAnother(m, m.Origin);
 				}
 			}
@@ -248,16 +250,16 @@ public class Node {
 				m.Origin = index;
 				m.Index = messageIndex;
 				
-				if(m.Model == 0 || m.Model == 1){	// If it's linearnizability or sequential consistent
+				if(m.Model == 1 || m.Model == 2){	// If it's linearnizability or sequential consistent
 					sendToAnother(m, 'O');
 				}else{	// If it's eventual consistent
 					sentToAllOthers(m);
 				}
 				
-			}else if(m.Model == 1 || m.Model == 0){	// If received a message and it's linearizability or sequential consistent
+			}else if(m.Model == 1 || m.Model == 2){	// If received a message and it's linearizability or sequential consistent
 				if(m.Origin == index){
 					String displayContent = "Key " + values.get(m.Key) + " updated to " + m.Value;
-					System.out.println(displayContent);
+					System.out.println("\n"+displayContent);
 					
 					values.put(m.Key, m.Value);
 					
@@ -267,28 +269,28 @@ public class Node {
 					}
 				}else{
 					String displayContent = "Key " + m.Key + " changed from " + values.get(m.Key) + " to " + m.Value;
-					System.out.println(displayContent);
+					System.out.println("\n"+displayContent);
 					
 					values.put(m.Key, m.Value);				
 				}
 			}else{	 // If received as eventual consistent
 				if(m.Origin == index && m.Index == messageIndex){	// If it's a current write request from myself
 					messagesReceived.add(m);
-					if(messagesReceived.size() == m.Model - 1){
+					if(messagesReceived.size() == m.Model - 2){
 						String displayContent = "Key " + values.get(m.Key) + " updated to " + m.Value;
-						System.out.println(displayContent);
+						System.out.println("\n"+displayContent);
 						
 						values.put(m.Key, m.Value);
 						timeStamps.put(m.Key, m.RealDeliverTime);
 						messagesReceived.clear();
 						
-						sent = false;
 						messageIndex++;
+						sent = false;
 					}
 					
 				}else if(m.Origin != index){	// If it's a write request from other nodes
 					String displayContent = "Key " + m.Key + " changed from " + values.get(m.Key) + " to " + m.Value;
-					System.out.println(displayContent);
+					System.out.println("\n"+displayContent);
 					
 					values.put(m.Key, m.Value);
 					timeStamps.put(m.Key, m.RealDeliverTime);
@@ -323,11 +325,11 @@ public class Node {
 						}
 						
 						for(Message currentMessage : messagesReceived){
-							if(m.Value == "True"){
+							if(m.Value.equals("True")){
 								displayContent += currentMessage.From + " ";
 							}
 						}
-						System.out.println(displayContent);
+						System.out.println("\n"+displayContent);
 
 						messagesReceived.clear();
 						messageIndex++;
@@ -345,9 +347,8 @@ public class Node {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			
-			sent = false;
 			messageIndex++;
+			sent = false;
 			
 			break;
 			
@@ -356,9 +357,9 @@ public class Node {
 			for(Entry<String, String> entry : values.entrySet()){
 				System.out.println(entry.getKey() + "," + entry.getValue());
 			}
-			
-			sent = false;
+			System.out.println();
 			messageIndex++;
+			sent = false;
 			break;
 			
 		}

@@ -115,8 +115,12 @@ public class Client extends Thread{
 	        		while ((messageLine = reader.readLine()) != null) {
 	        			handleInputMessage(messageLine);
 			        	// Wait until the message
+	        			int count = 0;
 	        			while(this.node.sent == true){
-			       			System.out.print(".");
+	        				if(count % 8 == 0){
+	        					System.out.print(".");
+	        				}
+	        				count++;
 			       			Thread.sleep(100);
 			       		};
 			       		System.out.println();
