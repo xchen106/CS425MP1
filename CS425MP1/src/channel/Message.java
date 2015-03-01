@@ -33,8 +33,9 @@ public class Message {
 	 * 3 -- insert
 	 * 4 -- update
 	 * 5 -- search
-	 * 6-- delay
-	 * 7-- show-all
+	 * 6 -- delay
+	 * 7 -- show-all
+	 * 8 -- repair
 	 */
 	
 	// TODO: repair

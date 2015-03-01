@@ -99,8 +99,12 @@ public class Client extends Thread{
 		        	String messageLine = br.readLine();
 		        	handleInputMessage(messageLine);
 		       		// Wait until the message 
+		        	int count = 0;
 		       		while(this.node.sent == true){
-		       			System.out.print(".");
+		       			if(count % 8 == 0){
+        					System.out.print(".");
+        				}
+        				count++;
 		       			Thread.sleep(100);
 		       		};
 		       		System.out.println();
@@ -113,6 +117,9 @@ public class Client extends Thread{
 		        		
 		       		String messageLine = null;
 	        		while ((messageLine = reader.readLine()) != null) {
+	        			
+	        			System.out.println("Current commane = " + messageLine);
+	        			
 	        			handleInputMessage(messageLine);
 			        	// Wait until the message
 	        			int count = 0;

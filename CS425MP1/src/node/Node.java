@@ -1,6 +1,5 @@
 package node;
 
-import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -187,7 +186,15 @@ public class Node {
 						
 						messageIndex++;
 						messagesReceived.clear();
-						sent = false;
+						
+						// start to repair
+						System.out.println("\nstart to repair...");
+						Message newMessage = new Message();
+						newMessage.Origin = index;
+						newMessage.Index = messageIndex;
+						newMessage.Operation = 8;
+						newMessage.Key = "request";
+						sentToAllOthers(newMessage);						
 					}
 				}
 			}
@@ -345,7 +352,7 @@ public class Node {
 			
 		// Delay
 		case 6:
-			int sleepTime = Integer.valueOf(m.Value);
+			double sleepTime = Double.valueOf(m.Value);
 			try {
 				Thread.sleep((long)sleepTime*1000);
 			} catch (InterruptedException e) {
@@ -366,6 +373,54 @@ public class Node {
 			sent = false;
 			break;
 			
+		// Repair
+		case 8:
+			if(m.Origin != index){	// received repair request from another node
+				if(m.Key.equals("request")){	// node requesting all key value timestamp pairs
+					m.Content = getAllKeyValueWithTime();
+					sendToAnother(m, m.Origin);
+				}else if(m.Key.equals("repair")){	// update key value timestamp pairs from the existing latest values
+					List<String> contentList = new ArrayList<String>();
+					contentList.add(m.Content);
+					
+					// combine and repair
+					repairKeyValueToLatest(contentList);
+					
+					System.out.println("repaired");
+					for(Entry<String, String> entry : values.entrySet()){
+						System.out.println(entry.getKey() + "," + entry.getValue());
+					}
+					System.out.println();
+					
+				}
+			}else if(m.Origin == index && m.Index == messageIndex){	// my own repair request returned from other nodes
+				// count whether have received messages from all other nodes
+				messagesReceived.add(m);
+				if(messagesReceived.size() == 3){
+					List<String> contentList = new ArrayList<String>();
+					for(Message message : messagesReceived){
+						contentList.add(message.Content);
+					}
+					
+					// combine and repair
+					repairKeyValueToLatest(contentList);
+					
+					// send to others
+					m.Content = getAllKeyValueWithTime();
+					m.Key = "repair";
+					sentToAllOthers(m);
+					
+					System.out.println("repaired");
+					for(Entry<String, String> entry : values.entrySet()){
+						System.out.println(entry.getKey() + "," + entry.getValue());
+					}
+					System.out.println();
+
+					messagesReceived.clear();
+					messageIndex++;
+					sent = false;
+				}
+			}
 		}
 	}
 	
@@ -389,53 +444,6 @@ public class Node {
 			this.clientThread.channelD.putMessageString(message.messageToString());
 		}
 	}
-	
-	public List<Message> sentToKOthers(Message message, int K) throws ParseException{
-		int count = 0;
-		List<Message> messagesToBeSent = new ArrayList<Message>();
-
-
-		message.From = index;
-		if(index!='A'){
-			if(count < K){
-				message.To = 'A';
-				this.clientThread.channelA.putMessageString(message.messageToString());
-				K++;
-			}else{
-				messagesToBeSent.add(new Message().stringToMessage(message.messageToString()));
-			}
-		}
-		if(index!='B'){
-			if(count < K){
-				message.To = 'B';
-				this.clientThread.channelB.putMessageString(message.messageToString());
-				K++;
-			}else{
-				messagesToBeSent.add(new Message().stringToMessage(message.messageToString()));
-			}		
-		}
-		if(index!='C'){
-			if(count < K){
-				message.To = 'C';
-				this.clientThread.channelC.putMessageString(message.messageToString());
-				K++;
-			}else{
-				messagesToBeSent.add(new Message().stringToMessage(message.messageToString()));
-			}	
-		}
-		if(index!='D'){
-			if(count < K){
-				message.To = 'D';
-				this.clientThread.channelD.putMessageString(message.messageToString());
-				K++;
-			}else{
-				messagesToBeSent.add(new Message().stringToMessage(message.messageToString()));
-			}		
-		}
-		
-		return messagesToBeSent;
-	}
-	
 	
 	public void sendToAnother(Message message, char receiver) throws ParseException{
 		message.From = index;
@@ -461,6 +469,58 @@ public class Node {
 		}
 	}
 	
+	
+	/**
+	 * Method for getting the string representation of the whole key value hashmap with time stamp
+	 * @return
+	 */
+	public String getAllKeyValueWithTime()
+	{
+		StringBuilder sb=new StringBuilder();
+		for(String key: values.keySet())
+		{
+			String v=values.get(key);
+			Date t=timeStamps.get(key);
+			DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			String ts=formatter.format(t);
+			sb.append(key).append(",").append(v).append(",").append(ts).append("|");
+		}
+		return sb.toString();
+	}
+	
+	
+	/**
+	 * Method for repairing the current node's key value pairs, after receiving all the key value 
+	 * from the other nodes.
+	 * 
+	 * @param kvarray
+	 * @throws ParseException
+	 */
+	public void repairKeyValueToLatest(List<String> kvarray) throws ParseException
+	{
+		for(String kvhashmap: kvarray)
+		{
+			String[] kvs=kvhashmap.split("\\|");
+			if(kvs[0].length()<=0)
+				continue;
+			for(int i=0;i<kvs.length;i++)
+			{
+				String kv=kvs[i];
+				String[] elements=kv.split(",");
+				if(elements[0].length()<=0)
+					continue;
+				String key=elements[0];
+				String v=elements[1];
+				DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				Date ts=formatter.parse(elements[2]);
+				if(!timeStamps.containsKey(key)||timeStamps.get(key).before(ts))
+				{
+					timeStamps.put(key, ts);
+					values.put(key, v);
+				}
+			}
+		}
+	}
 	
 		
 }
