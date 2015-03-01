@@ -27,12 +27,12 @@ public class Node {
 	boolean sent = false;
 	
 	
-	public static void main(String[] args){
+	public static void main(String[] args) throws InterruptedException{
 		new Node().initialization("./accessories/configuration", args[0].charAt(0));
 	}
 	
 	
-	public void initialization(String configurationFile, char index){
+	public void initialization(String configurationFile, char index) throws InterruptedException{
 		this.index = index;
 		this.messageIndex = -1;
 		this.values = new HashMap<String, String>();
@@ -42,15 +42,19 @@ public class Node {
 		// read the addresses and port numbers from the configuration file
 		HashMap<String, String> configuration = new Utils().parseConfigure(configurationFile);
 		
+		System.out.println("IP address = " + configuration.get("serverAddress" + index));
+		System.out.println("port number  = " + configuration.get("serverPort" + index));
+		if(index == 'O'){
+			System.out.println("machine index = coordinator");
+		}else{
+			System.out.println("machine index = " + index);
+		}
+		
 		serverThread = new Server(configuration, index, this);
 		clientThread = new Client(configuration, index, this);
 		
 		serverThread.start();
-		try {
-			System.in.read();
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
+		Thread.sleep(2000);
 		clientThread.start();
 	
 		

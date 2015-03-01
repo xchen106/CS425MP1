@@ -19,31 +19,19 @@ public class Listener implements Runnable{
 		this.node = node;
 	}
 	
-	public void run(){
-		try {			
-			// handle the request
-			handle(clientSocket);
-			
-			// close the socket
-            clientSocket.close();
-		} catch (IOException e) {
-            e.printStackTrace();
-        }
-		
-	}
-	
 	// handle received message
-	public void handle(Socket clientSocket){
-        try {
+	public void run(){
+		try {
         	InputStream input = clientSocket.getInputStream();
 			InputStreamReader inputReader = new InputStreamReader(input);
             BufferedReader bufferReader = new BufferedReader(inputReader);
-            // TODO: while(true)
-            String string = bufferReader.readLine();
-			Message m = new Message().stringToMessage(string);
-			m.setRealDeliverTime();
-			
-			this.node.handleMessage(m);
+            while(true){
+	            String string = bufferReader.readLine();
+				Message m = new Message().stringToMessage(string);
+				m.setRealDeliverTime();
+				
+				this.node.handleMessage(m);
+            }
 			
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -51,5 +39,4 @@ public class Listener implements Runnable{
 			e.printStackTrace();
 		}
 	}
-	
 }

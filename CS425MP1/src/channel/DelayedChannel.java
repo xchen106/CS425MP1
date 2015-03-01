@@ -24,18 +24,15 @@ public class DelayedChannel extends Thread{
 	//Writer for output to channel
 	BufferedWriter out;
 	
-	String hostname;
-	String portnum;
-	
 	public DelayedChannel(String hostname, String portnum, int max) throws NumberFormatException, UnknownHostException, IOException
 	{
 		super("DelayedChannel");
-		this.hostname = hostname;
-		this.portnum = portnum;
 		
-		MaxDelay=max;
-		Contents= new ArrayDeque<Message>();
-		CurrentCount=new Semaphore(0);
+		MySocket = new Socket(hostname, Integer.parseInt(portnum));
+		
+		MaxDelay = max;
+		Contents = new ArrayDeque<Message>();
+		CurrentCount = new Semaphore(0);
 	}
 	/*
 	 * The put method for all the contents
@@ -83,7 +80,7 @@ public class DelayedChannel extends Thread{
 		while(true)
 		{
 			try {
-				MySocket =new Socket(hostname, Integer.parseInt(portnum));
+		//		MySocket =new Socket(hostname, Integer.parseInt(portnum));
 				out= new BufferedWriter(new OutputStreamWriter(MySocket.getOutputStream()));
 				
 				//Block when empty
