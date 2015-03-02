@@ -124,11 +124,11 @@ public class Client extends Thread{
 			        	// Wait until the message
 	        			int count = 0;
 	        			while(this.node.sent == true){
-	        				if(count % 8 == 0){
+	        				if(count % 20 == 0){
 	        					System.out.print(".");
 	        				}
 	        				count++;
-			       			Thread.sleep(100);
+			       			Thread.sleep(10);
 			       		};
 			       		System.out.println();
 		       		}   
