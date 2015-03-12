@@ -88,11 +88,11 @@ public class DelayedChannel extends Thread{
 				//get Message out from the queue
 				Message m=Contents.poll();
 				//get current time
-				Date date= new Date();
+				Long date= new Date().getTime();
 				//if need to be delayed, then sleep for the difference
-				if(date.before(m.EstimatedDeliverTime))
+				if(date < m.EstimatedDeliverTime)
 				{
-					long milisecond=m.EstimatedDeliverTime.getTime() - date.getTime();
+					long milisecond= m.EstimatedDeliverTime - date;
 					Thread.sleep(milisecond);
 				}
 				//send the message

@@ -8,9 +8,9 @@ import java.util.Date;
 
 public class Message {
 	public String Content;
-	public Date SentTime;
-	public Date EstimatedDeliverTime;
-	public Date RealDeliverTime;
+	public Long SentTime;
+	public Long EstimatedDeliverTime;
+	public Long RealDeliverTime;
 	public String Key;
 	public String Value;
 	public char From;
@@ -79,15 +79,9 @@ public class Message {
 		sb.append(Operation).append(";");
 		sb.append(Model).append(";");
 		sb.append(Index).append(";");
-		DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		if(SentTime != null)
-			sb.append(formatter.format(SentTime));
-		sb.append(";");
-		if(EstimatedDeliverTime != null)
-			sb.append(formatter.format(EstimatedDeliverTime));
-		sb.append(";");
-		if(RealDeliverTime != null)
-			sb.append(formatter.format(RealDeliverTime));
+		sb.append(SentTime).append(";");
+		sb.append(EstimatedDeliverTime).append(";");
+		sb.append(RealDeliverTime).append(";");
 		return sb.toString();
 	}
 	public Message stringToMessage(String s) throws ParseException
@@ -105,32 +99,37 @@ public class Message {
 		m.Operation=Integer.parseInt(ss[7]);
 		m.Model=Integer.parseInt(ss[8]);
 		m.Index=Integer.parseInt(ss[9]);
-		DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		if(ss[10]!=null && ss[10].equals("")==false) m.SentTime=formatter.parse(ss[10]);
-		else m.SentTime = null;
-		if(ss[11]!=null && ss[11].equals("")==false) m.EstimatedDeliverTime=formatter.parse(ss[11]);
-		else m.EstimatedDeliverTime = null;
-		if(ss[12]!=null && ss[12].equals("")==false) m.RealDeliverTime=formatter.parse(ss[12]);
-		else m.RealDeliverTime = null;
+		if(ss[10] != null && ss[10].length() != 0 && ss[10].equals("null") == false){
+			m.SentTime = Long.parseLong(ss[10]);
+		}else{
+			m.SentTime = null;
+		}
+		if(ss[11] != null && ss[11].length() != 0 && ss[11].equals("null") == false){
+			m.EstimatedDeliverTime=Long.parseLong(ss[11]);
+		}else{
+			m.EstimatedDeliverTime = null;
+		}
+		if(ss[12] != null && ss[12].length() != 0 && ss[12].equals("null") == false){
+			m.RealDeliverTime=Long.parseLong(ss[12]);
+		}else{
+			m.RealDeliverTime = null;
+		}
 		
 		return m;
 	}
 	public void setSentTime()
 	{
-		SentTime=new Date();
+		SentTime=new Date().getTime();
 	}
 	public void setEstimatedDeliverTime(int MaxDelay)
 	{
-		int delay=(int)(Math.random()*MaxDelay);
-		Calendar cal = Calendar.getInstance(); // creates calendar
-		cal.setTime(new Date()); // sets calendar time/date
-		cal.add(Calendar.SECOND, delay); // adds one hour
-		EstimatedDeliverTime=cal.getTime(); // returns new date object, one hour in the future
+		int delay=(int)(Math.random()*(double)MaxDelay*1000.0);	// delay in milli seconds
+		EstimatedDeliverTime= SentTime + delay;
 		
 	}
 	public void setRealDeliverTime()
 	{
-		RealDeliverTime=new Date();
+		RealDeliverTime=new Date().getTime();
 	}
 	public static void main(String[] args) throws ParseException
 	{

@@ -19,7 +19,7 @@ public class Node {
 	// The index for the message that it just sent
 	int messageIndex;
 	HashMap<String, String> values;
-	HashMap<String, Date> timeStamps;
+	HashMap<String, Long> timeStamps;
 	List<Message> messagesReceived;
 
 	List<Message> messagesToBeSent;
@@ -35,7 +35,7 @@ public class Node {
 		this.index = index;
 		this.messageIndex = -1;
 		this.values = new HashMap<String, String>();
-		this.timeStamps = new HashMap<String, Date>();
+		this.timeStamps = new HashMap<String, Long>();
 		this.messagesReceived = new ArrayList<Message>();
 		
 		// read the addresses and port numbers from the configuration file
@@ -74,7 +74,7 @@ public class Node {
 		// Sent text messages
 		case 0:
 			if(m.Key == null || m.Key.length()==0){	// if sending a message
-				String displayContent = "Sent \"" + m.Content +"\" to " + m.To + ", system time is " + new Date();
+				String displayContent = "Sent \"" + m.Content +"\" to " + m.To + ", system time is " + new Date().getTime();
 				m.Key = "receive";
 				m.From = index;
 				m.Origin = index;
@@ -84,7 +84,7 @@ public class Node {
 				messageIndex++;
 				sent = false;
 			}else{	// if receiving a message
-				String displayContent = "Received \"" + m.Content + "\" from " + m.Origin + ", Max delay is " + m.MaxDelay + " s, system time is " + new Date();
+				String displayContent = "Received \"" + m.Content + "\" from " + m.Origin + ", Max delay is " + m.MaxDelay + " s, system time is " + new Date().getTime();
 				System.out.println("\n"+displayContent);
 			}
 			break;
@@ -96,17 +96,21 @@ public class Node {
 			}else if(m.Origin == '\u0000'){	// If read the command from a text file, send it to the coordinator
 				m.Origin = index;
 				m.Index = messageIndex;
+				m.Content = String.valueOf(new Date().getTime());	// store the sent time
 				sendToAnother(m, 'O');
 			}else{	// If receive the delete command from a coordinator, delete immediately
 				if(values.containsKey(m.Key)){
 					values.remove(m.Key);
-					timeStamps.put(m.Key, m.RealDeliverTime);
+					timeStamps.put(m.Key, Long.valueOf(m.Content));
+					String displayContent = "Delete " + m.Key;
+					System.out.println("\n"+displayContent);
+				}else{
+					String displayContent = "Key " + m.Key + " doesn't exist";
+					timeStamps.put(m.Key, Long.valueOf(m.Content));
+					System.out.println("\n"+displayContent);
 				}
 				
-				String displayContent = "Delete " + m.Key;
-				System.out.println("\n"+displayContent);
-				if(m.Origin == index && m.Index == messageIndex){
-					
+				if(m.Origin == index && m.Index == messageIndex){	
 					messageIndex++;
 					sent = false;
 				}
@@ -125,7 +129,7 @@ public class Node {
 					if(values.containsKey(m.Key)){
 						displayContent += values.get(m.Key);
 					}else{
-						displayContent += "null";
+						displayContent += "doesn't exist";
 					}
 					System.out.println("\n"+displayContent);
 					
@@ -133,7 +137,30 @@ public class Node {
 					sent = false;
 				}else if(m.Model == 1){	// For linearizability, send it to the coordinator
 					sendToAnother(m, 'O');
-				}else{	// For eventual consistency, send the message request to all other nodes
+				}else if(m.Model == 3){	// directly read from myself
+					Long timeStamp = null;
+					String value = null;
+					// compare current node's time
+					if(timeStamps.containsKey(m.Key)){
+						timeStamp = timeStamps.get(m.Key);
+						value = values.get(m.Key);
+					}
+					String displayContent = "<";
+					displayContent += ("(" + value + "," + timeStamp + ")" ); 
+					displayContent += ">";
+					displayContent  = "get(" + m.Key + ") = (" + value + "," + timeStamp + ")," + "examed = " + displayContent;
+					System.out.println("\n"+displayContent);
+					
+					// start to repair
+					System.out.println("\nstart to repair...");
+					Message newMessage = new Message();
+					newMessage.Origin = index;
+					newMessage.Index = messageIndex;
+					newMessage.Operation = 8;
+					newMessage.Key = "request";
+					sentToAllOthers(newMessage);
+					
+				}else if(m.Model == 4){	// For eventual consistency, send the message request to all other nodes
 					sentToAllOthers(m);
 				}
 			}else if(m.Model == 1 && m.Origin == index && m.Index == messageIndex){	// If it's a just sent linearinizability read request
@@ -141,48 +168,54 @@ public class Node {
 				if(values.containsKey(m.Key)){
 					displayContent += values.get(m.Key);
 				}else{
-					displayContent += "null";
+					displayContent += " deosn't exist";
 				}
 				System.out.println("\n"+displayContent);
 
 				messageIndex++;
 				sent = false;
-			}else if(m.Model == 3 || m.Model == 4){	// If it's an eventually consistent request
+			}else if(m.Model == 4){	// If it's an eventually consistent request
 				if(m.Origin != index){	// If it's a request from another node, send back the value and timestamp
 					m.Value = values.get(m.Key);
-					
-					Date timeStamp = timeStamps.get(m.Key);
-					if(timeStamp != null){
-						DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-						m.Content = formatter.format(timeStamp);
-					}
+					m.Content = String.valueOf(timeStamps.get(m.Key));
 					
 					sendToAnother(m, m.Origin);
 				}else if(m.Index == messageIndex){	// If it's a request from myself, and it's about the current read request, save it into the temporary messages query and check whether the condition is satisfied
 					messagesReceived.add(m);
-					if(messagesReceived.size() == m.Model - 2){
+					if(messagesReceived.size() == m.Model - 3){
 						String displayContent = "<";
-						DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-						try {
-							Date latestTimeStamp  = formatter.parse("0000-00-00 00:00:00");
-							String latestValue = "";
-							for(Message currentMessage : messagesReceived){
-								if(m.Content !=null){
-									Date timeStamp = formatter.parse(currentMessage.Content);
-									String value = currentMessage.Value;
-									displayContent += ("(" + value + "," + currentMessage.Content + ")" ); 
-									if(timeStamp.after(latestTimeStamp)){
-										latestTimeStamp = timeStamp;
-										latestValue = value;
-									}
+						
+						Long latestTimeStamp  = null;
+						String latestValue = null;
+							
+						Long timeStamp = null;
+						String value = null;
+						// compare current node's time
+						if(timeStamps.containsKey(m.Key)){
+							timeStamp = timeStamps.get(m.Key);
+							value = values.get(m.Key);
+							if(latestTimeStamp == null || timeStamp > latestTimeStamp){
+								latestTimeStamp = timeStamp;
+								latestValue = value;
+							}
+						}
+						displayContent += ("(" + value + "," + timeStamp + ")" ); 
+							
+						// for another messages received
+						for(Message currentMessage : messagesReceived){
+							if(m.Content !=null && m.Content.equals("null") == false){
+								timeStamp = Long.valueOf(currentMessage.Content);
+								value = currentMessage.Value;
+								if(latestTimeStamp == null || timeStamp > latestTimeStamp){
+									latestTimeStamp = timeStamp;
+									latestValue = value;
 								}
 							}
-							displayContent += ">";
-							displayContent  = "get(" + m.Key + ") = (" + latestValue + "," + latestTimeStamp + ")," + "examed = " + displayContent;
-							System.out.println("\n"+displayContent);
-						}catch (ParseException e) {
-							e.printStackTrace();
+							displayContent += ("(" + value + "," + currentMessage.Content + ")" ); 
 						}
+						displayContent += ">";
+						displayContent  = "get(" + m.Key + ") = (" + latestValue + "," + latestTimeStamp + ")," + "examed = " + displayContent;
+						System.out.println("\n"+displayContent);
 						
 						messageIndex++;
 						messagesReceived.clear();
@@ -209,13 +242,20 @@ public class Node {
 			}else if(m.Origin == '\u0000'){	// If read the command from a text file
 				m.Origin = index;
 				m.Index = messageIndex;
-				
-				System.out.println(m.messageToString());
-				
+								
 				if(m.Model == 1 || m.Model == 2){	// If it's linearnizability or sequential consistent
 					sendToAnother(m, 'O');
 				}else{	// If it's eventual consistent
 					sentToAllOthers(m);
+					if(m.Model == 3){	// if W = 1, directly write to myself
+						values.put(m.Key, m.Value);
+						timeStamps.put(m.Key, new Date().getTime());
+						
+						String displayContent = "inserted key " + m.Key;
+						System.out.println("\n"+displayContent);
+						messageIndex++;
+						sent = false;
+					}
 				}		
 				
 			}else if(m.Model == 1 || m.Model == 2){	// If received a message and it's linearizability or sequential consistent
@@ -229,11 +269,11 @@ public class Node {
 					sent = false;
 				}
 			}else{ // If received as eventual consistent				
-				if(m.Origin == index && m.Index == messageIndex){	// If it's a current write request from myself
+				if(m.Origin == index && m.Index == messageIndex && m.Model == 4){	// If it's a current write request from myself (only handle when W == 4)
 					messagesReceived.add(m);
-					if(messagesReceived.size() == m.Model - 2){
+					if(messagesReceived.size() == m.Model - 3){
 						values.put(m.Key, m.Value);
-						timeStamps.put(m.Key, m.RealDeliverTime);
+						timeStamps.put(m.Key, Long.valueOf(m.Content));
 						messagesReceived.clear();
 						
 						String displayContent = "inserted key " + m.Key;
@@ -244,7 +284,8 @@ public class Node {
 					
 				}else if(m.Origin != index){	// If it's a write request from other nodes
 					values.put(m.Key, m.Value);
-					timeStamps.put(m.Key, m.RealDeliverTime);
+					timeStamps.put(m.Key, m.SentTime);
+					m.Content = String.valueOf(m.SentTime);
 					
 					String displayContent = "inserted key " + m.Key;
 					System.out.println("\n"+displayContent);
@@ -265,6 +306,15 @@ public class Node {
 					sendToAnother(m, 'O');
 				}else{	// If it's eventual consistent
 					sentToAllOthers(m);
+					if(m.Model == 3){	// if W = 1, directly write to myself
+						values.put(m.Key, m.Value);
+						timeStamps.put(m.Key, new Date().getTime());
+						
+						String displayContent = "Key " + m.Key + " updated to " + m.Value;
+						System.out.println("\n"+displayContent);
+						messageIndex++;
+						sent = false;
+					}
 				}
 				
 			}else if(m.Model == 1 || m.Model == 2){	// If received a message and it's linearizability or sequential consistent
@@ -285,14 +335,14 @@ public class Node {
 					values.put(m.Key, m.Value);				
 				}
 			}else{	 // If received as eventual consistent
-				if(m.Origin == index && m.Index == messageIndex){	// If it's a current write request from myself
+				if(m.Origin == index && m.Index == messageIndex && m.Model == 4){	// If it's a current write request from myself, only need to handle when model == 4
 					messagesReceived.add(m);
-					if(messagesReceived.size() == m.Model - 2){
+					if(messagesReceived.size() == m.Model - 3){
 						String displayContent = "Key " + values.get(m.Key) + " updated to " + m.Value;
 						System.out.println("\n"+displayContent);
 						
 						values.put(m.Key, m.Value);
-						timeStamps.put(m.Key, m.RealDeliverTime);
+						timeStamps.put(m.Key, Long.valueOf(m.Content));
 						messagesReceived.clear();
 						
 						messageIndex++;
@@ -304,7 +354,9 @@ public class Node {
 					System.out.println("\n"+displayContent);
 					
 					values.put(m.Key, m.Value);
-					timeStamps.put(m.Key, m.RealDeliverTime);
+					timeStamps.put(m.Key, m.SentTime);
+					
+					m.Content = m.SentTime.toString();
 					sendToAnother(m, m.Origin);
 				}
 				
@@ -321,7 +373,7 @@ public class Node {
 				sentToAllOthers(m);
 			}else{
 				if(m.Origin != index){	// If it's a request from another node, send back whether it contains the Key
-					if(values.containsKey(m.Key) == true){
+					if(values.get(m.Key) != null){
 						m.Value = "True";
 					}else{
 						m.Value = "False";
@@ -336,7 +388,7 @@ public class Node {
 						}
 						
 						for(Message currentMessage : messagesReceived){
-							if(m.Value.equals("True")){
+							if(currentMessage.Value.equals("True")){
 								displayContent += currentMessage.From + " ";
 							}
 						}
@@ -368,6 +420,9 @@ public class Node {
 			for(Entry<String, String> entry : values.entrySet()){
 				System.out.println(entry.getKey() + "," + entry.getValue());
 			}
+	//		for(Entry<String, Long> entry : timeStamps.entrySet()){
+	//			System.out.println(entry.getKey() + "," + entry.getValue());
+	//		}
 			System.out.println();
 			messageIndex++;
 			sent = false;
@@ -477,13 +532,15 @@ public class Node {
 	public String getAllKeyValueWithTime()
 	{
 		StringBuilder sb=new StringBuilder();
-		for(String key: values.keySet())
+		for(String key: timeStamps.keySet())
 		{
 			String v=values.get(key);
-			Date t=timeStamps.get(key);
-			DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			String ts=formatter.format(t);
-			sb.append(key).append(",").append(v).append(",").append(ts).append("|");
+			Long t=timeStamps.get(key);
+			sb.append(key).append(",");
+			if(v != null){
+				sb.append(v);
+			}
+			sb.append(",").append(t).append("|");
 		}
 		return sb.toString();
 	}
@@ -506,17 +563,21 @@ public class Node {
 			for(int i=0;i<kvs.length;i++)
 			{
 				String kv=kvs[i];
-				String[] elements=kv.split(",");
+				String[] elements=kv.split(",",-1);
 				if(elements[0].length()<=0)
 					continue;
 				String key=elements[0];
 				String v=elements[1];
-				DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				Date ts=formatter.parse(elements[2]);
-				if(!timeStamps.containsKey(key)||timeStamps.get(key).before(ts))
+				Long ts= Long.valueOf(elements[2]);
+				if(!timeStamps.containsKey(key) || timeStamps.get(key) < ts)
 				{
 					timeStamps.put(key, ts);
-					values.put(key, v);
+					if(values.containsKey(key) && v.length()==0){
+						values.remove(key);
+					}else{
+						values.put(key, v);
+					}
+					
 				}
 			}
 		}

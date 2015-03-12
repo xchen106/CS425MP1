@@ -118,7 +118,7 @@ public class Client extends Thread{
 		       		String messageLine = null;
 	        		while ((messageLine = reader.readLine()) != null) {
 	        			
-	        			System.out.println("Current commane = " + messageLine);
+	        			System.out.println("Current command = " + messageLine);
 	        			
 	        			handleInputMessage(messageLine);
 			        	// Wait until the message
